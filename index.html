@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="theme-color" content="#1B4965">
+<title>Controle de KM · CRIL</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --azul-900:#12283A;
+    --azul-800:#1B4965;
+    --azul-600:#2C6C93;
+    --azul-400:#5FA8D3;
+    --azul-100:#E7F1F8;
+    --verde:#2D6A4F;
+    --verde-bg:#E7F3EE;
+    --ambar:#B4652A;
+    --ambar-bg:#FBEEE3;
+    --vermelho:#A6383B;
+    --vermelho-bg:#FBEAEA;
+    --bg:#F5F8FA;
+    --superficie:#FFFFFF;
+    --linha:#DDE5EA;
+    --texto:#182B33;
+    --texto-2:#5B7480;
+    --radius:10px;
+    --sombra: 0 1px 2px rgba(18,40,58,.06), 0 4px 16px rgba(18,40,58,.06);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--texto);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace; font-variant-numeric: tabular-nums;}
+  button{font-family:inherit; cursor:pointer;}
+  input, select, textarea{font-family:inherit; font-size:15px;}
+
+  /* ---------- Login ---------- */
+  #login-screen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(160deg, var(--azul-900) 0%, var(--azul-800) 55%, var(--azul-600) 100%);
+    padding:24px;
+  }
+  .login-card{
+    background:var(--superficie); border-radius:16px; padding:36px 32px;
+    width:100%; max-width:380px; box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  }
+  .brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+  .brand-mark{
+    width:34px; height:34px; border-radius:8px;
+    background: var(--azul-800);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:15px;
+  }
+  .brand-name{font-weight:800; font-size:17px; letter-spacing:-.2px;}
+  .brand-sub{color:var(--texto-2); font-size:12.5px; margin:2px 0 26px 44px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12.5px; font-weight:600; color:var(--texto-2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.03em;}
+  .field input, .field select{
+    width:100%; padding:11px 12px; border:1.5px solid var(--linha); border-radius:8px;
+    background:#fff; transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus{outline:none; border-color:var(--azul-600);}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px 18px; border-radius:8px; border:none; font-weight:600; font-size:14.5px;
+    transition: transform .08s, filter .15s;
+  }
+  .btn:active{transform: scale(.98);}
+  .btn-primario{background:var(--azul-800); color:#fff; width:100%;}
+  .btn-primario:hover{filter:brightness(1.08);}
+  .btn-primario:disabled{opacity:.55; cursor:not-allowed;}
+  .btn-secundario{background:var(--azul-100); color:var(--azul-800);}
+  .btn-fantasma{background:transparent; color:var(--texto-2); border:1.5px solid var(--linha);}
+  .btn-perigo{background:var(--vermelho-bg); color:var(--vermelho);}
+  .btn-sucesso{background:var(--verde); color:#fff;}
+  .login-erro{
+    background:var(--vermelho-bg); color:var(--vermelho); font-size:13px; padding:10px 12px;
+    border-radius:8px; margin-bottom:14px; display:none;
+  }
+  .perfil-toggle{display:flex; gap:8px; margin-bottom:20px;}
+  .perfil-btn{
+    flex:1; padding:10px; border-radius:8px; border:1.5px solid var(--linha); background:#fff;
+    font-size:13.5px; font-weight:600; color:var(--texto-2); text-align:center;
+  }
+  .perfil-btn.ativo{border-color:var(--azul-800); background:var(--azul-100); color:var(--azul-800);}
+
+  /* ---------- App shell ---------- */
+  #app-screen{display:none; min-height:100vh; flex-direction:column;}
+  header.topo{
+    background:var(--azul-800); color:#fff; padding:14px 20px;
+    display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20;
+    box-shadow: var(--sombra);
+  }
+  .topo-esq{display:flex; align-items:center; gap:10px;}
+  .topo-titulo{font-weight:700; font-size:15.5px;}
+  .topo-sub{font-size:11.5px; color:#BBD6E8; margin-top:1px;}
+  .topo-dir{display:flex; align-items:center; gap:10px;}
+  .chip-usuario{font-size:12.5px; background:rgba(255,255,255,.12); padding:6px 10px; border-radius:20px;}
+  .btn-sair{background:rgba(255,255,255,.12); color:#fff; padding:8px 12px; border-radius:8px; font-size:13px; font-weight:600;}
+
+  main{flex:1; padding:20px; max-width:960px; width:100%; margin:0 auto;}
+
+  .card{
+    background:var(--superficie); border-radius:var(--radius); padding:22px;
+    box-shadow: var(--sombra); margin-bottom:18px; border:1px solid var(--linha);
+  }
+  .card h2{font-size:16px; font-weight:700; margin-bottom:4px;}
+  .card .card-sub{font-size:13px; color:var(--texto-2); margin-bottom:16px;}
+
+  /* Status da viagem */
+  .status-badge{
+    display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700;
+    padding:5px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:.03em;
+  }
+  .status-badge.livre{background:var(--verde-bg); color:var(--verde);}
+  .status-badge.aberta{background:var(--ambar-bg); color:var(--ambar);}
+  .status-dot{width:7px; height:7px; border-radius:50%; background:currentColor;}
+
+  .km-atual{
+    display:flex; align-items:baseline; gap:8px; margin:14px 0 20px;
+    background:var(--azul-100); border-radius:8px; padding:14px 16px;
+  }
+  .km-atual .valor{font-size:26px; font-weight:800; color:var(--azul-800);}
+  .km-atual .label{font-size:12.5px; color:var(--texto-2); font-weight:600;}
+
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:520px){.grid-2{grid-template-columns:1fr;}}
+
+  .tipo-opcoes{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;}
+  .tipo-btn{
+    padding:12px 10px; border-radius:8px; border:1.5px solid var(--linha); background:#fff;
+    font-size:13px; font-weight:600; color:var(--texto-2); text-align:center;
+  }
+  .tipo-btn.selecionado{border-color:var(--azul-800); background:var(--azul-100); color:var(--azul-800);}
+
+  .viagem-aberta-box{
+    border:1.5px dashed var(--ambar); background:var(--ambar-bg); border-radius:8px; padding:16px; margin-bottom:16px;
+  }
+  .viagem-aberta-box .linha{display:flex; justify-content:space-between; font-size:13.5px; padding:4px 0;}
+  .viagem-aberta-box .linha b{color:var(--texto);}
+
+  /* Tabs admin */
+  .tabs{display:flex; gap:4px; margin-bottom:16px; border-bottom:1.5px solid var(--linha);}
+  .tab{padding:10px 14px; font-size:13.5px; font-weight:600; color:var(--texto-2); border-bottom:2.5px solid transparent; margin-bottom:-1.5px;}
+  .tab.ativa{color:var(--azul-800); border-color:var(--azul-800);}
+
+  .dash-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:18px;}
+  .dash-stat{background:var(--azul-100); border-radius:8px; padding:14px;}
+  .dash-stat .n{font-size:22px; font-weight:800; color:var(--azul-800);}
+  .dash-stat .l{font-size:11.5px; color:var(--texto-2); font-weight:600; text-transform:uppercase; letter-spacing:.02em; margin-top:2px;}
+
+  .filtros{display:flex; gap:10px; align-items:end; margin-bottom:16px; flex-wrap:wrap;}
+  .filtros .field{margin-bottom:0; min-width:130px;}
+
+  table.registros{width:100%; border-collapse:collapse; font-size:12.5px;}
+  table.registros th{
+    background:var(--azul-100); color:var(--azul-800); text-align:left; padding:9px 8px;
+    font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.02em; white-space:nowrap;
+  }
+  table.registros td{padding:9px 8px; border-bottom:1px solid var(--linha); vertical-align:top;}
+  table.registros tr:hover td{background:#FAFCFD;}
+  .tipo-pill{font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:20px; white-space:nowrap;}
+  .tipo-pill.visita{background:#E7F1F8; color:var(--azul-600);}
+  .tipo-pill.viagem{background:#EFE9F8; color:#6B4FA3;}
+  .tipo-pill.abastecimento{background:var(--ambar-bg); color:var(--ambar);}
+  .tipo-pill.outro{background:#EEF1F3; color:var(--texto-2);}
+  .editavel{border:1px solid transparent; border-radius:5px; padding:3px 5px; width:100%; background:transparent;}
+  .editavel:hover{border-color:var(--linha);}
+  .editavel:focus{border-color:var(--azul-600); background:#fff; outline:none;}
+  .acoes-row{display:flex; gap:6px;}
+  .icon-btn{background:none; border:none; padding:4px; color:var(--texto-2); font-size:14px;}
+  .icon-btn:hover{color:var(--azul-800);}
+  .vazio{text-align:center; padding:40px 20px; color:var(--texto-2); font-size:13.5px;}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--azul-900); color:#fff; padding:12px 20px; border-radius:8px; font-size:13.5px;
+    box-shadow:0 10px 30px rgba(0,0,0,.3); opacity:0; pointer-events:none; transition:all .25s; z-index:100;
+    display:flex; align-items:center; gap:8px;
+  }
+  .toast.mostrar{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast.erro{background:var(--vermelho);}
+  .toast.sucesso{background:var(--verde);}
+
+  /* ---------- Impressão ---------- */
+  #print-area{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #print-area, #print-area *{visibility:visible;}
+    #print-area{display:block; position:absolute; top:0; left:0; width:100%; padding:16px;}
+    .print-cabecalho{text-align:center; margin-bottom:18px;}
+    .print-cabecalho h1{font-size:15px; letter-spacing:.03em;}
+    .print-meta{display:flex; justify-content:space-between; margin-bottom:14px; font-size:12px;}
+    .print-meta div{flex:1; text-align:center;}
+    .print-meta b{display:block; font-size:12.5px;}
+    table.print-tabela{width:100%; border-collapse:collapse; font-size:10px;}
+    table.print-tabela th, table.print-tabela td{border:1px solid #333; padding:5px 4px; text-align:center;}
+    table.print-tabela th{font-size:9px; text-transform:uppercase;}
+    table.print-tabela td.itinerario{text-align:left;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-mark">KM</div>
+      <div class="brand-name">Controle de KM</div>
+    </div>
+    <div class="brand-sub">Central de Regulação Interestadual de Leitos</div>
+
+    <div class="perfil-toggle">
+      <button class="perfil-btn ativo" id="btn-perfil-motorista" onclick="window.selecionarPerfil('motorista')">Motorista</button>
+      <button class="perfil-btn" id="btn-perfil-admin" onclick="window.selecionarPerfil('admin')">Administrador</button>
+    </div>
+
+    <div class="login-erro" id="login-erro"></div>
+
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu.email@exemplo.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label id="label-senha">PIN de acesso</label>
+      <input type="password" id="login-senha" placeholder="••••••" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primario" id="btn-entrar" onclick="window.fazerLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app-screen">
+  <header class="topo">
+    <div class="topo-esq">
+      <div>
+        <div class="topo-titulo">Controle de KM · Polo Track</div>
+        <div class="topo-sub">Placa SWA 7G41 · CRIL</div>
+      </div>
+    </div>
+    <div class="topo-dir">
+      <span class="chip-usuario" id="chip-usuario">—</span>
+      <button class="btn-sair" onclick="window.fazerLogout()">Sair</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ---------- VISÃO MOTORISTA ---------- -->
+    <div id="view-motorista" style="display:none;">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h2 style="margin:0;">Registro de viagem</h2>
+          <span class="status-badge livre" id="status-badge"><span class="status-dot"></span>Veículo livre</span>
+        </div>
+
+        <div class="km-atual">
+          <span class="valor mono" id="km-atual-valor">—</span>
+          <span class="label">KM atual do veículo</span>
+        </div>
+
+        <!-- Sem viagem aberta -->
+        <div id="bloco-iniciar">
+          <div class="field">
+            <label>Tipo de deslocamento</label>
+            <div class="tipo-opcoes">
+              <button class="tipo-btn" data-tipo="visita_hospitalar" onclick="window.selecionarTipo('visita_hospitalar')">Visita hospitalar</button>
+              <button class="tipo-btn" data-tipo="viagem" onclick="window.selecionarTipo('viagem')">Viagem</button>
+              <button class="tipo-btn" data-tipo="abastecimento" onclick="window.selecionarTipo('abastecimento')">Abastecimento</button>
+              <button class="tipo-btn" data-tipo="outro" onclick="window.selecionarTipo('outro')">Outro</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Itinerário / destino</label>
+            <input type="text" id="input-itinerario" placeholder="Ex.: Hospital Regional de Juazeiro">
+          </div>
+          <button class="btn btn-primario" onclick="window.iniciarViagem()">Iniciar viagem</button>
+        </div>
+
+        <!-- Com viagem aberta -->
+        <div id="bloco-finalizar" style="display:none;">
+          <div class="viagem-aberta-box">
+            <div class="linha"><span>Tipo</span><b id="fv-tipo">—</b></div>
+            <div class="linha"><span>Itinerário</span><b id="fv-itinerario">—</b></div>
+            <div class="linha"><span>Início</span><b id="fv-inicio">—</b></div>
+            <div class="linha"><span>KM inicial</span><b id="fv-km-inicial" class="mono">—</b></div>
+          </div>
+          <div class="field">
+            <label id="label-km-final">KM final (visor do painel)</label>
+            <input type="number" id="input-km-final" placeholder="Ex.: 45210" inputmode="numeric">
+          </div>
+          <button class="btn btn-sucesso" style="width:100%;" onclick="window.finalizarViagem()">Finalizar viagem</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- VISÃO ADMIN ---------- -->
+    <div id="view-admin" style="display:none;">
+      <div class="tabs">
+        <div class="tab ativa" id="tab-dashboard" onclick="window.mudarAba('dashboard')">Dashboard</div>
+        <div class="tab" id="tab-registros" onclick="window.mudarAba('registros')">Registros</div>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="aba-dashboard">
+        <div class="card">
+          <div class="filtros">
+            <div class="field">
+              <label>Mês</label>
+              <select id="filtro-mes"></select>
+            </div>
+            <div class="field">
+              <label>Ano</label>
+              <select id="filtro-ano"></select>
+            </div>
+            <button class="btn btn-secundario" onclick="window.carregarDados()">Filtrar</button>
+            <button class="btn btn-primario" onclick="window.gerarImpressao()">Gerar página p/ impressão</button>
+          </div>
+          <div class="dash-grid">
+            <div class="dash-stat"><div class="n mono" id="dash-total-km">—</div><div class="l">KM total no período</div></div>
+            <div class="dash-stat"><div class="n mono" id="dash-viagens">—</div><div class="l">Viagens registradas</div></div>
+            <div class="dash-stat"><div class="n mono" id="dash-visitas">—</div><div class="l">Visitas hospitalares</div></div>
+            <div class="dash-stat"><div class="n mono" id="dash-abastecimentos">—</div><div class="l">Abastecimentos</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registros -->
+      <div id="aba-registros" style="display:none;">
+        <div class="card">
+          <h2>Registros do período</h2>
+          <div class="card-sub">Clique em qualquer campo para corrigir. As alterações salvam automaticamente.</div>
+          <div style="overflow-x:auto;">
+            <table class="registros">
+              <thead>
+                <tr>
+                  <th>Data</th><th>H. Início</th><th>H. Fim</th><th>KM Inicial</th><th>KM Final</th>
+                  <th>KM Rodado</th><th>Tipo</th><th>Itinerário</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="tabela-registros-body"></tbody>
+            </table>
+            <div class="vazio" id="registros-vazio" style="display:none;">Nenhum registro neste período.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== ÁREA DE IMPRESSÃO ===================== -->
+<div id="print-area">
+  <div class="print-cabecalho">
+    <h1>CENTRAL DE REGULAÇÃO INTERESTADUAL DE LEITOS</h1>
+  </div>
+  <div class="print-meta">
+    <div><b id="print-mes-ano">—</b>MÊS/ANO</div>
+    <div><b>POLO TRACK</b>VEÍCULO</div>
+    <div><b>SWA 7G41</b>PLACA</div>
+  </div>
+  <table class="print-tabela">
+    <thead>
+      <tr>
+        <th>Data</th><th>Hora Inicial</th><th>Hora Final</th><th>KM Inicial</th><th>KM Final</th>
+        <th>KM Abastecimento</th><th>Assinatura Usuário</th><th>Itinerário</th>
+      </tr>
+    </thead>
+    <tbody id="print-tabela-body"></tbody>
+  </table>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc,
+    query, where, orderBy, onSnapshot, serverTimestamp, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB39uROQZuugZiMBhW64pWeua8cuZhGnhw",
+    authDomain: "controle-km-cril.firebaseapp.com",
+    projectId: "controle-km-cril",
+    storageBucket: "controle-km-cril.firebasestorage.app",
+    messagingSenderId: "826811855259",
+    appId: "1:826811855259:web:30ad4b40afec696d07313e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const VEICULO_ID = "polo-track"; // documento único do veículo em /veiculos
+  let perfilSelecionado = "motorista";
+  let perfilUsuario = null; // 'motorista' | 'admin' — vem de /usuarios/{uid}
+  let tipoSelecionado = null;
+  let viagemAberta = null; // doc atual em aberto
+  let kmAtualVeiculo = null;
+  let unsubRegistros = null;
+
+  // ---------- Toast ----------
+  function toast(msg, tipo=""){
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.className = "toast mostrar " + tipo;
+    setTimeout(()=> el.classList.remove("mostrar"), 3000);
+  }
+
+  // ---------- Login ----------
+  window.selecionarPerfil = function(perfil){
+    perfilSelecionado = perfil;
+    document.getElementById("btn-perfil-motorista").classList.toggle("ativo", perfil==="motorista");
+    document.getElementById("btn-perfil-admin").classList.toggle("ativo", perfil==="admin");
+    document.getElementById("label-senha").textContent = perfil==="motorista" ? "PIN de acesso" : "Senha";
+  };
+
+  window.fazerLogin = async function(){
+    const email = document.getElementById("login-email").value.trim();
+    const senha = document.getElementById("login-senha").value;
+    const erroEl = document.getElementById("login-erro");
+    erroEl.style.display = "none";
+    const btn = document.getElementById("btn-entrar");
+    if(!email || !senha){
+      erroEl.textContent = "Preencha e-mail e senha/PIN.";
+      erroEl.style.display = "block";
+      return;
+    }
+    btn.disabled = true; btn.textContent = "Entrando...";
+    try{
+      await signInWithEmailAndPassword(auth, email, senha);
+      // onAuthStateChanged cuida do resto
+    }catch(e){
+      erroEl.textContent = "E-mail ou senha inválidos.";
+      erroEl.style.display = "block";
+    }finally{
+      btn.disabled = false; btn.textContent = "Entrar";
+    }
+  };
+
+  window.fazerLogout = async function(){
+    await signOut(auth);
+  };
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){
+      document.getElementById("login-screen").style.display = "flex";
+      document.getElementById("app-screen").style.display = "none";
+      return;
+    }
+    // Busca o perfil do usuário (definido manualmente na coleção /usuarios)
+    const usuarioSnap = await getDoc(doc(db, "usuarios", user.uid));
+    perfilUsuario = usuarioSnap.exists() ? usuarioSnap.data().perfil : "motorista";
+
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app-screen").style.display = "flex";
+    document.getElementById("chip-usuario").textContent =
+      (perfilUsuario === "admin" ? "Admin · " : "Motorista · ") + user.email;
+
+    document.getElementById("view-motorista").style.display = perfilUsuario === "motorista" ? "block" : "none";
+    document.getElementById("view-admin").style.display = perfilUsuario === "admin" ? "block" : "none";
+
+    if(perfilUsuario === "motorista"){
+      iniciarListenersMotorista();
+    } else {
+      inicializarFiltrosData();
+      window.carregarDados();
+    }
+  });
+
+  // ---------- MOTORISTA ----------
+  async function iniciarListenersMotorista(){
+    // KM atual do veículo (tempo real)
+    onSnapshot(doc(db, "veiculos", VEICULO_ID), (snap)=>{
+      if(snap.exists()){
+        kmAtualVeiculo = snap.data().kmAtual;
+        document.getElementById("km-atual-valor").textContent = kmAtualVeiculo?.toLocaleString("pt-BR") ?? "—";
+        document.getElementById("fv-km-inicial").textContent = kmAtualVeiculo?.toLocaleString("pt-BR") ?? "—";
+      }
+    });
+
+    // Viagem em aberto (se existir)
+    const q = query(collection(db, "registros"), where("status", "==", "aberto"));
+    onSnapshot(q, (snap)=>{
+      if(snap.empty){
+        viagemAberta = null;
+        mostrarBlocoIniciar();
+      } else {
+        const docSnap = snap.docs[0];
+        viagemAberta = { id: docSnap.id, ...docSnap.data() };
+        mostrarBlocoFinalizar();
+      }
+    });
+  }
+
+  function mostrarBlocoIniciar(){
+    document.getElementById("bloco-iniciar").style.display = "block";
+    document.getElementById("bloco-finalizar").style.display = "none";
+    document.getElementById("status-badge").className = "status-badge livre";
+    document.getElementById("status-badge").innerHTML = '<span class="status-dot"></span>Veículo livre';
+  }
+
+  function mostrarBlocoFinalizar(){
+    document.getElementById("bloco-iniciar").style.display = "none";
+    document.getElementById("bloco-finalizar").style.display = "block";
+    document.getElementById("status-badge").className = "status-badge aberta";
+    document.getElementById("status-badge").innerHTML = '<span class="status-dot"></span>Viagem em andamento';
+
+    const rotulos = {visita_hospitalar:"Visita hospitalar", viagem:"Viagem", abastecimento:"Abastecimento", outro:"Outro"};
+    document.getElementById("fv-tipo").textContent = rotulos[viagemAberta.tipo] || "—";
+    document.getElementById("fv-itinerario").textContent = viagemAberta.itinerario || "—";
+    const inicio = viagemAberta.horaInicial?.toDate ? viagemAberta.horaInicial.toDate() : null;
+    document.getElementById("fv-inicio").textContent = inicio ? inicio.toLocaleString("pt-BR") : "—";
+    document.getElementById("fv-km-inicial").textContent = viagemAberta.kmInicial?.toLocaleString("pt-BR") ?? "—";
+    document.getElementById("label-km-final").textContent =
+      viagemAberta.tipo === "abastecimento" ? "KM no momento do abastecimento" : "KM final (visor do painel)";
+  }
+
+  window.selecionarTipo = function(tipo){
+    tipoSelecionado = tipo;
+    document.querySelectorAll(".tipo-btn").forEach(b=>{
+      b.classList.toggle("selecionado", b.dataset.tipo === tipo);
+    });
+  };
+
+  window.iniciarViagem = async function(){
+    if(!tipoSelecionado){ toast("Escolha o tipo de deslocamento.", "erro"); return; }
+    const itinerario = document.getElementById("input-itinerario").value.trim();
+    if(!itinerario){ toast("Informe o itinerário/destino.", "erro"); return; }
+    if(kmAtualVeiculo == null){ toast("KM do veículo ainda não carregada, aguarde.", "erro"); return; }
+
+    try{
+      await addDoc(collection(db, "registros"), {
+        status: "aberto",
+        tipo: tipoSelecionado,
+        itinerario,
+        kmInicial: kmAtualVeiculo,
+        kmFinal: null,
+        kmRodado: null,
+        horaInicial: serverTimestamp(),
+        horaFinal: null,
+        registradoPor: auth.currentUser.email,
+        editadoPor: null,
+        editadoEm: null
+      });
+      tipoSelecionado = null;
+      document.getElementById("input-itinerario").value = "";
+      document.querySelectorAll(".tipo-btn").forEach(b=>b.classList.remove("selecionado"));
+      toast("Viagem iniciada.", "sucesso");
+    }catch(e){
+      console.error(e);
+      toast("Erro ao iniciar viagem.", "erro");
+    }
+  };
+
+  window.finalizarViagem = async function(){
+    const kmFinalInput = document.getElementById("input-km-final").value;
+    const kmFinal = Number(kmFinalInput);
+    if(!kmFinalInput || isNaN(kmFinal)){ toast("Informe a KM final.", "erro"); return; }
+    if(kmFinal < viagemAberta.kmInicial){
+      toast("KM final não pode ser menor que a KM inicial (" + viagemAberta.kmInicial.toLocaleString("pt-BR") + ").", "erro");
+      return;
+    }
+    try{
+      await updateDoc(doc(db, "registros", viagemAberta.id), {
+        status: "fechado",
+        kmFinal,
+        kmRodado: kmFinal - viagemAberta.kmInicial,
+        horaFinal: serverTimestamp()
+      });
+      await setDoc(doc(db, "veiculos", VEICULO_ID), { kmAtual: kmFinal }, { merge: true });
+      document.getElementById("input-km-final").value = "";
+      toast("Viagem finalizada.", "sucesso");
+    }catch(e){
+      console.error(e);
+      toast("Erro ao finalizar viagem.", "erro");
+    }
+  };
+
+  // ---------- ADMIN ----------
+  window.mudarAba = function(aba){
+    document.getElementById("tab-dashboard").classList.toggle("ativa", aba==="dashboard");
+    document.getElementById("tab-registros").classList.toggle("ativa", aba==="registros");
+    document.getElementById("aba-dashboard").style.display = aba==="dashboard" ? "block" : "none";
+    document.getElementById("aba-registros").style.display = aba==="registros" ? "block" : "none";
+  };
+
+  function inicializarFiltrosData(){
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const selMes = document.getElementById("filtro-mes");
+    const selAno = document.getElementById("filtro-ano");
+    const hoje = new Date();
+    meses.forEach((m,i)=>{
+      const opt = document.createElement("option");
+      opt.value = i+1; opt.textContent = m;
+      if(i === hoje.getMonth()) opt.selected = true;
+      selMes.appendChild(opt);
+    });
+    for(let a = hoje.getFullYear(); a >= hoje.getFullYear()-3; a--){
+      const opt = document.createElement("option");
+      opt.value = a; opt.textContent = a;
+      if(a === hoje.getFullYear()) opt.selected = true;
+      selAno.appendChild(opt);
+    }
+  }
+
+  let registrosDoPeriodo = [];
+
+  window.carregarDados = function(){
+    const mes = Number(document.getElementById("filtro-mes").value);
+    const ano = Number(document.getElementById("filtro-ano").value);
+    const inicio = Timestamp.fromDate(new Date(ano, mes-1, 1, 0,0,0));
+    const fim = Timestamp.fromDate(new Date(ano, mes, 1, 0,0,0));
+
+    if(unsubRegistros) unsubRegistros();
+
+    const q = query(
+      collection(db, "registros"),
+      where("horaInicial", ">=", inicio),
+      where("horaInicial", "<", fim),
+      orderBy("horaInicial", "asc")
+    );
+
+    unsubRegistros = onSnapshot(q, (snap)=>{
+      registrosDoPeriodo = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      renderizarDashboard();
+      renderizarTabela();
+    });
+  };
+
+  function renderizarDashboard(){
+    const fechados = registrosDoPeriodo.filter(r=>r.status==="fechado");
+    const totalKm = fechados.reduce((s,r)=> s + (r.kmRodado||0), 0);
+    const visitas = registrosDoPeriodo.filter(r=>r.tipo==="visita_hospitalar").length;
+    const abastecimentos = registrosDoPeriodo.filter(r=>r.tipo==="abastecimento").length;
+
+    document.getElementById("dash-total-km").textContent = totalKm.toLocaleString("pt-BR") + " km";
+    document.getElementById("dash-viagens").textContent = registrosDoPeriodo.length;
+    document.getElementById("dash-visitas").textContent = visitas;
+    document.getElementById("dash-abastecimentos").textContent = abastecimentos;
+  }
+
+  const rotulosTipo = {visita_hospitalar:"Visita hospitalar", viagem:"Viagem", abastecimento:"Abastecimento", outro:"Outro"};
+  const classeTipo = {visita_hospitalar:"visita", viagem:"viagem", abastecimento:"abastecimento", outro:"outro"};
+
+  function renderizarTabela(){
+    const tbody = document.getElementById("tabela-registros-body");
+    const vazio = document.getElementById("registros-vazio");
+    tbody.innerHTML = "";
+    vazio.style.display = registrosDoPeriodo.length === 0 ? "block" : "none";
+
+    registrosDoPeriodo.forEach(r=>{
+      const tr = document.createElement("tr");
+      const dataObj = r.horaInicial?.toDate ? r.horaInicial.toDate() : null;
+      const horaFimObj = r.horaFinal?.toDate ? r.horaFinal.toDate() : null;
+
+      tr.innerHTML = `
+        <td>${dataObj ? dataObj.toLocaleDateString("pt-BR") : "—"}</td>
+        <td>${dataObj ? dataObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—"}</td>
+        <td>${horaFimObj ? horaFimObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—"}</td>
+        <td><input class="editavel mono" data-id="${r.id}" data-campo="kmInicial" value="${r.kmInicial ?? ""}"></td>
+        <td><input class="editavel mono" data-id="${r.id}" data-campo="kmFinal" value="${r.kmFinal ?? ""}"></td>
+        <td class="mono">${r.kmRodado != null ? r.kmRodado.toLocaleString("pt-BR") : "—"}</td>
+        <td><span class="tipo-pill ${classeTipo[r.tipo]||"outro"}">${rotulosTipo[r.tipo]||r.tipo}</span></td>
+        <td><input class="editavel" data-id="${r.id}" data-campo="itinerario" value="${(r.itinerario||"").replace(/"/g,'&quot;')}"></td>
+        <td class="acoes-row"></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll(".editavel").forEach(input=>{
+      input.addEventListener("change", async (e)=>{
+        const id = e.target.dataset.id;
+        const campo = e.target.dataset.campo;
+        let valor = e.target.value;
+        if(campo === "kmInicial" || campo === "kmFinal") valor = Number(valor);
+        const dados = { [campo]: valor, editadoPor: auth.currentUser.email, editadoEm: serverTimestamp() };
+        // recalcula km rodado se mudou km inicial/final
+        const registro = registrosDoPeriodo.find(r=>r.id===id);
+        if(registro && (campo==="kmInicial" || campo==="kmFinal")){
+          const novoInicial = campo==="kmInicial" ? valor : registro.kmInicial;
+          const novoFinal = campo==="kmFinal" ? valor : registro.kmFinal;
+          if(novoInicial != null && novoFinal != null){
+            dados.kmRodado = novoFinal - novoInicial;
+          }
+        }
+        try{
+          await updateDoc(doc(db,"registros",id), dados);
+          toast("Registro atualizado.", "sucesso");
+        }catch(err){
+          console.error(err);
+          toast("Erro ao salvar alteração.", "erro");
+        }
+      });
+    });
+  }
+
+  // ---------- Impressão ----------
+  window.gerarImpressao = function(){
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const mes = Number(document.getElementById("filtro-mes").value);
+    const ano = document.getElementById("filtro-ano").value;
+    document.getElementById("print-mes-ano").textContent = meses[mes-1] + " / " + ano;
+
+    const tbody = document.getElementById("print-tabela-body");
+    tbody.innerHTML = "";
+    const linhasMinimas = 20;
+    const total = Math.max(registrosDoPeriodo.length, linhasMinimas);
+
+    for(let i=0; i<total; i++){
+      const r = registrosDoPeriodo[i];
+      const tr = document.createElement("tr");
+      if(r){
+        const dataObj = r.horaInicial?.toDate ? r.horaInicial.toDate() : null;
+        const horaFimObj = r.horaFinal?.toDate ? r.horaFinal.toDate() : null;
+        tr.innerHTML = `
+          <td>${dataObj ? dataObj.toLocaleDateString("pt-BR") : ""}</td>
+          <td>${dataObj ? dataObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : ""}</td>
+          <td>${horaFimObj ? horaFimObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : ""}</td>
+          <td>${r.kmInicial ?? ""}</td>
+          <td>${r.kmFinal ?? ""}</td>
+          <td>${r.tipo === "abastecimento" ? (r.kmFinal ?? "") : ""}</td>
+          <td></td>
+          <td class="itinerario">${r.itinerario ?? ""}</td>
+        `;
+      } else {
+        tr.innerHTML = `<td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>`;
+      }
+      tbody.appendChild(tr);
+    }
+    window.print();
+  };
+
+  // Registra o service worker (PWA)
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", ()=>{
+      navigator.serviceWorker.register("sw.js").catch(()=>{});
+    });
+  }
+</script>
+</body>
+</html>
