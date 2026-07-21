@@ -20,6 +20,8 @@
     --verde-bg:#E7F3EE;
     --ambar:#B4652A;
     --ambar-bg:#FBEEE3;
+    --roxo:#6B4FA3;
+    --roxo-bg:#EFE9F8;
     --vermelho:#A6383B;
     --vermelho-bg:#FBEAEA;
     --bg:#F5F8FA;
@@ -41,8 +43,8 @@
   .mono{font-family:'IBM Plex Mono',monospace; font-variant-numeric: tabular-nums;}
   button{font-family:inherit; cursor:pointer;}
   input, select, textarea{font-family:inherit; font-size:15px;}
+  input.upper{text-transform:uppercase;}
 
-  /* ---------- Login ---------- */
   #login-screen{
     min-height:100vh; display:flex; align-items:center; justify-content:center;
     background: linear-gradient(160deg, var(--azul-900) 0%, var(--azul-800) 55%, var(--azul-600) 100%);
@@ -81,6 +83,7 @@
   .btn-fantasma{background:transparent; color:var(--texto-2); border:1.5px solid var(--linha);}
   .btn-perigo{background:var(--vermelho-bg); color:var(--vermelho);}
   .btn-sucesso{background:var(--verde); color:#fff;}
+  .btn-ambar{background:var(--ambar-bg); color:var(--ambar); border:1.5px solid var(--ambar);}
   .login-erro{
     background:var(--vermelho-bg); color:var(--vermelho); font-size:13px; padding:10px 12px;
     border-radius:8px; margin-bottom:14px; display:none;
@@ -92,7 +95,6 @@
   }
   .perfil-btn.ativo{border-color:var(--azul-800); background:var(--azul-100); color:var(--azul-800);}
 
-  /* ---------- App shell ---------- */
   #app-screen{display:none; min-height:100vh; flex-direction:column;}
   header.topo{
     background:var(--azul-800); color:#fff; padding:14px 20px;
@@ -115,7 +117,6 @@
   .card h2{font-size:16px; font-weight:700; margin-bottom:4px;}
   .card .card-sub{font-size:13px; color:var(--texto-2); margin-bottom:16px;}
 
-  /* Status da viagem */
   .status-badge{
     display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700;
     padding:5px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:.03em;
@@ -124,17 +125,17 @@
   .status-badge.aberta{background:var(--ambar-bg); color:var(--ambar);}
   .status-dot{width:7px; height:7px; border-radius:50%; background:currentColor;}
 
-  .km-atual{
-    display:flex; align-items:baseline; gap:8px; margin:14px 0 20px;
-    background:var(--azul-100); border-radius:8px; padding:14px 16px;
-  }
-  .km-atual .valor{font-size:26px; font-weight:800; color:var(--azul-800);}
-  .km-atual .label{font-size:12.5px; color:var(--texto-2); font-weight:600;}
+  .km-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0 20px;}
+  .km-box{background:var(--azul-100); border-radius:8px; padding:12px 14px;}
+  .km-box .valor{font-size:22px; font-weight:800; color:var(--azul-800); display:block;}
+  .km-box .label{font-size:11.5px; color:var(--texto-2); font-weight:600;}
+  @media (max-width:480px){.km-grid{grid-template-columns:1fr;}}
 
   .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
   @media (max-width:520px){.grid-2{grid-template-columns:1fr;}}
 
-  .tipo-opcoes{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;}
+  .tipo-opcoes{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px;}
+  @media (max-width:480px){.tipo-opcoes{grid-template-columns:1fr;}}
   .tipo-btn{
     padding:12px 10px; border-radius:8px; border:1.5px solid var(--linha); background:#fff;
     font-size:13px; font-weight:600; color:var(--texto-2); text-align:center;
@@ -147,14 +148,28 @@
   .viagem-aberta-box .linha{display:flex; justify-content:space-between; font-size:13.5px; padding:4px 0;}
   .viagem-aberta-box .linha b{color:var(--texto);}
 
-  /* Tabs admin */
-  .tabs{display:flex; gap:4px; margin-bottom:16px; border-bottom:1.5px solid var(--linha);}
-  .tab{padding:10px 14px; font-size:13.5px; font-weight:600; color:var(--texto-2); border-bottom:2.5px solid transparent; margin-bottom:-1.5px;}
+  .divisor{border:none; border-top:1.5px dashed var(--linha); margin:20px 0;}
+
+  .abastecimento-toggle{
+    width:100%; padding:12px; border-radius:8px; border:1.5px solid var(--ambar);
+    background:var(--ambar-bg); color:var(--ambar); font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  #form-abastecimento{display:none; margin-top:14px; padding-top:14px; border-top:1.5px solid var(--linha);}
+  .autonomia-preview{
+    background:var(--verde-bg); color:var(--verde); font-size:13px; font-weight:600;
+    padding:10px 12px; border-radius:8px; margin-bottom:14px; display:none;
+  }
+
+  .tabs{display:flex; gap:4px; margin-bottom:16px; border-bottom:1.5px solid var(--linha); overflow-x:auto;}
+  .tab{padding:10px 14px; font-size:13.5px; font-weight:600; color:var(--texto-2); border-bottom:2.5px solid transparent; margin-bottom:-1.5px; white-space:nowrap;}
   .tab.ativa{color:var(--azul-800); border-color:var(--azul-800);}
 
   .dash-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:18px;}
   .dash-stat{background:var(--azul-100); border-radius:8px; padding:14px;}
+  .dash-stat.destaque{background:var(--verde-bg);}
   .dash-stat .n{font-size:22px; font-weight:800; color:var(--azul-800);}
+  .dash-stat.destaque .n{color:var(--verde);}
   .dash-stat .l{font-size:11.5px; color:var(--texto-2); font-weight:600; text-transform:uppercase; letter-spacing:.02em; margin-top:2px;}
 
   .filtros{display:flex; gap:10px; align-items:end; margin-bottom:16px; flex-wrap:wrap;}
@@ -169,15 +184,11 @@
   table.registros tr:hover td{background:#FAFCFD;}
   .tipo-pill{font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:20px; white-space:nowrap;}
   .tipo-pill.visita{background:#E7F1F8; color:var(--azul-600);}
-  .tipo-pill.viagem{background:#EFE9F8; color:#6B4FA3;}
-  .tipo-pill.abastecimento{background:var(--ambar-bg); color:var(--ambar);}
+  .tipo-pill.viagem{background:var(--roxo-bg); color:var(--roxo);}
   .tipo-pill.outro{background:#EEF1F3; color:var(--texto-2);}
   .editavel{border:1px solid transparent; border-radius:5px; padding:3px 5px; width:100%; background:transparent;}
   .editavel:hover{border-color:var(--linha);}
   .editavel:focus{border-color:var(--azul-600); background:#fff; outline:none;}
-  .acoes-row{display:flex; gap:6px;}
-  .icon-btn{background:none; border:none; padding:4px; color:var(--texto-2); font-size:14px;}
-  .icon-btn:hover{color:var(--azul-800);}
   .vazio{text-align:center; padding:40px 20px; color:var(--texto-2); font-size:13.5px;}
 
   .toast{
@@ -190,27 +201,26 @@
   .toast.erro{background:var(--vermelho);}
   .toast.sucesso{background:var(--verde);}
 
-  /* ---------- Impressão ---------- */
   #print-area{display:none;}
+  @page{ size: landscape; margin: 10mm; }
   @media print{
     body *{visibility:hidden;}
     #print-area, #print-area *{visibility:visible;}
-    #print-area{display:block; position:absolute; top:0; left:0; width:100%; padding:16px;}
-    .print-cabecalho{text-align:center; margin-bottom:18px;}
+    #print-area{display:block; position:absolute; top:0; left:0; width:100%; padding:6px;}
+    .print-cabecalho{text-align:center; margin-bottom:14px;}
     .print-cabecalho h1{font-size:15px; letter-spacing:.03em;}
-    .print-meta{display:flex; justify-content:space-between; margin-bottom:14px; font-size:12px;}
+    .print-meta{display:flex; justify-content:space-between; margin-bottom:12px; font-size:12px;}
     .print-meta div{flex:1; text-align:center;}
     .print-meta b{display:block; font-size:12.5px;}
     table.print-tabela{width:100%; border-collapse:collapse; font-size:10px;}
     table.print-tabela th, table.print-tabela td{border:1px solid #333; padding:5px 4px; text-align:center;}
     table.print-tabela th{font-size:9px; text-transform:uppercase;}
-    table.print-tabela td.itinerario{text-align:left;}
+    table.print-tabela td.itinerario, table.print-tabela td.usuario{text-align:left;}
   }
 </style>
 </head>
 <body>
 
-<!-- ===================== LOGIN ===================== -->
 <div id="login-screen">
   <div class="login-card">
     <div class="brand">
@@ -238,7 +248,6 @@
   </div>
 </div>
 
-<!-- ===================== APP ===================== -->
 <div id="app-screen">
   <header class="topo">
     <div class="topo-esq">
@@ -254,7 +263,6 @@
   </header>
 
   <main>
-    <!-- ---------- VISÃO MOTORISTA ---------- -->
     <div id="view-motorista" style="display:none;">
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
@@ -262,78 +270,103 @@
           <span class="status-badge livre" id="status-badge"><span class="status-dot"></span>Veículo livre</span>
         </div>
 
-        <div class="km-atual">
-          <span class="valor mono" id="km-atual-valor">—</span>
-          <span class="label">KM atual do veículo</span>
+        <div class="km-grid">
+          <div class="km-box"><span class="valor mono" id="km-atual-valor">—</span><span class="label">KM atual do veículo</span></div>
+          <div class="km-box"><span class="valor mono" id="km-ultimo-abastecimento-valor">—</span><span class="label">KM do último abastecimento</span></div>
         </div>
 
-        <!-- Sem viagem aberta -->
         <div id="bloco-iniciar">
+          <div class="field">
+            <label>Nome do usuário do veículo</label>
+            <input type="text" id="input-nome-usuario" class="upper" placeholder="NOME DE QUEM VAI USAR O CARRO">
+          </div>
           <div class="field">
             <label>Tipo de deslocamento</label>
             <div class="tipo-opcoes">
               <button class="tipo-btn" data-tipo="visita_hospitalar" onclick="window.selecionarTipo('visita_hospitalar')">Visita hospitalar</button>
-              <button class="tipo-btn" data-tipo="viagem" onclick="window.selecionarTipo('viagem')">Viagem</button>
-              <button class="tipo-btn" data-tipo="abastecimento" onclick="window.selecionarTipo('abastecimento')">Abastecimento</button>
+              <button class="tipo-btn" data-tipo="viagem" onclick="window.selecionarTipo('viagem')">Viagem (ida e volta)</button>
               <button class="tipo-btn" data-tipo="outro" onclick="window.selecionarTipo('outro')">Outro</button>
             </div>
           </div>
           <div class="field">
             <label>Itinerário / destino</label>
-            <input type="text" id="input-itinerario" placeholder="Ex.: Hospital Regional de Juazeiro">
+            <input type="text" id="input-itinerario" class="upper" placeholder="EX.: HOSPITAL REGIONAL DE JUAZEIRO">
           </div>
           <button class="btn btn-primario" onclick="window.iniciarViagem()">Iniciar viagem</button>
         </div>
 
-        <!-- Com viagem aberta -->
         <div id="bloco-finalizar" style="display:none;">
           <div class="viagem-aberta-box">
+            <div class="linha"><span>Usuário</span><b id="fv-usuario">—</b></div>
             <div class="linha"><span>Tipo</span><b id="fv-tipo">—</b></div>
             <div class="linha"><span>Itinerário</span><b id="fv-itinerario">—</b></div>
             <div class="linha"><span>Início</span><b id="fv-inicio">—</b></div>
             <div class="linha"><span>KM inicial</span><b id="fv-km-inicial" class="mono">—</b></div>
           </div>
           <div class="field">
-            <label id="label-km-final">KM final (visor do painel)</label>
+            <label>KM final (visor do painel)</label>
             <input type="number" id="input-km-final" placeholder="Ex.: 45210" inputmode="numeric">
           </div>
           <button class="btn btn-sucesso" style="width:100%;" onclick="window.finalizarViagem()">Finalizar viagem</button>
         </div>
+
+        <hr class="divisor">
+
+        <button class="abastecimento-toggle" onclick="window.alternarFormAbastecimento()">Registrar abastecimento</button>
+        <div id="form-abastecimento">
+          <div class="field">
+            <label>KM no momento do abastecimento</label>
+            <input type="number" id="input-km-abastecimento" inputmode="numeric">
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Litros</label>
+              <input type="number" step="0.01" id="input-litros" placeholder="Ex.: 32.5" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label>Valor por litro (R$)</label>
+              <input type="number" step="0.01" id="input-valor-litro" placeholder="Ex.: 6.19" inputmode="decimal">
+            </div>
+          </div>
+          <div class="autonomia-preview" id="autonomia-preview"></div>
+          <button class="btn btn-ambar" style="width:100%;" onclick="window.registrarAbastecimento()">Salvar abastecimento</button>
+        </div>
       </div>
     </div>
 
-    <!-- ---------- VISÃO ADMIN ---------- -->
     <div id="view-admin" style="display:none;">
       <div class="tabs">
         <div class="tab ativa" id="tab-dashboard" onclick="window.mudarAba('dashboard')">Dashboard</div>
         <div class="tab" id="tab-registros" onclick="window.mudarAba('registros')">Registros</div>
+        <div class="tab" id="tab-combustivel" onclick="window.mudarAba('combustivel')">Combustível</div>
       </div>
 
-      <!-- Dashboard -->
+      <div class="card">
+        <div class="filtros">
+          <div class="field">
+            <label>Mês</label>
+            <select id="filtro-mes"></select>
+          </div>
+          <div class="field">
+            <label>Ano</label>
+            <select id="filtro-ano"></select>
+          </div>
+          <button class="btn btn-secundario" onclick="window.carregarDados()">Filtrar</button>
+          <button class="btn btn-primario" onclick="window.gerarImpressao()">Gerar página p/ impressão</button>
+        </div>
+      </div>
+
       <div id="aba-dashboard">
         <div class="card">
-          <div class="filtros">
-            <div class="field">
-              <label>Mês</label>
-              <select id="filtro-mes"></select>
-            </div>
-            <div class="field">
-              <label>Ano</label>
-              <select id="filtro-ano"></select>
-            </div>
-            <button class="btn btn-secundario" onclick="window.carregarDados()">Filtrar</button>
-            <button class="btn btn-primario" onclick="window.gerarImpressao()">Gerar página p/ impressão</button>
-          </div>
           <div class="dash-grid">
             <div class="dash-stat"><div class="n mono" id="dash-total-km">—</div><div class="l">KM total no período</div></div>
             <div class="dash-stat"><div class="n mono" id="dash-viagens">—</div><div class="l">Viagens registradas</div></div>
             <div class="dash-stat"><div class="n mono" id="dash-visitas">—</div><div class="l">Visitas hospitalares</div></div>
-            <div class="dash-stat"><div class="n mono" id="dash-abastecimentos">—</div><div class="l">Abastecimentos</div></div>
+            <div class="dash-stat destaque"><div class="n mono" id="dash-gasto-combustivel">—</div><div class="l">Gasto com combustível</div></div>
           </div>
         </div>
       </div>
 
-      <!-- Registros -->
       <div id="aba-registros" style="display:none;">
         <div class="card">
           <h2>Registros do período</h2>
@@ -342,8 +375,8 @@
             <table class="registros">
               <thead>
                 <tr>
-                  <th>Data</th><th>H. Início</th><th>H. Fim</th><th>KM Inicial</th><th>KM Final</th>
-                  <th>KM Rodado</th><th>Tipo</th><th>Itinerário</th><th></th>
+                  <th>Data</th><th>H. Início</th><th>H. Fim</th><th>Usuário</th><th>KM Inicial</th><th>KM Final</th>
+                  <th>KM Rodado</th><th>Tipo</th><th>Itinerário</th>
                 </tr>
               </thead>
               <tbody id="tabela-registros-body"></tbody>
@@ -352,11 +385,32 @@
           </div>
         </div>
       </div>
+
+      <div id="aba-combustivel" style="display:none;">
+        <div class="card">
+          <div class="dash-grid">
+            <div class="dash-stat"><div class="n mono" id="dash-litros">—</div><div class="l">Litros abastecidos</div></div>
+            <div class="dash-stat destaque"><div class="n mono" id="dash-gasto-total">—</div><div class="l">Valor total gasto</div></div>
+            <div class="dash-stat"><div class="n mono" id="dash-autonomia-media">—</div><div class="l">Autonomia média (km/l)</div></div>
+          </div>
+          <h2>Abastecimentos do período</h2>
+          <div style="overflow-x:auto;">
+            <table class="registros">
+              <thead>
+                <tr>
+                  <th>Data</th><th>KM</th><th>Litros</th><th>Valor/Litro</th><th>Total</th><th>Autonomia</th><th>Viagem vinculada</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-combustivel-body"></tbody>
+            </table>
+            <div class="vazio" id="combustivel-vazio" style="display:none;">Nenhum abastecimento neste período.</div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
 
-<!-- ===================== ÁREA DE IMPRESSÃO ===================== -->
 <div id="print-area">
   <div class="print-cabecalho">
     <h1>CENTRAL DE REGULAÇÃO INTERESTADUAL DE LEITOS</h1>
@@ -370,7 +424,7 @@
     <thead>
       <tr>
         <th>Data</th><th>Hora Inicial</th><th>Hora Final</th><th>KM Inicial</th><th>KM Final</th>
-        <th>KM Abastecimento</th><th>Assinatura Usuário</th><th>Itinerário</th>
+        <th>KM Abastecimento</th><th>Usuário</th><th>Assinatura</th><th>Itinerário</th>
       </tr>
     </thead>
     <tbody id="print-tabela-body"></tbody>
@@ -402,15 +456,16 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const VEICULO_ID = "polo-track"; // documento único do veículo em /veiculos
+  const VEICULO_ID = "polo-track";
   let perfilSelecionado = "motorista";
-  let perfilUsuario = null; // 'motorista' | 'admin' — vem de /usuarios/{uid}
+  let perfilUsuario = null;
   let tipoSelecionado = null;
-  let viagemAberta = null; // doc atual em aberto
+  let viagemAberta = null;
   let kmAtualVeiculo = null;
+  let kmUltimoAbastecimento = null;
   let unsubRegistros = null;
+  let unsubAbastecimentos = null;
 
-  // ---------- Toast ----------
   function toast(msg, tipo=""){
     const el = document.getElementById("toast");
     el.textContent = msg;
@@ -418,7 +473,18 @@
     setTimeout(()=> el.classList.remove("mostrar"), 3000);
   }
 
-  // ---------- Login ----------
+  function formatarMoeda(v){
+    return (v||0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+  }
+
+  document.querySelectorAll("input.upper").forEach(inp=>{
+    inp.addEventListener("input", ()=>{
+      const cursor = inp.selectionStart;
+      inp.value = inp.value.toUpperCase();
+      inp.setSelectionRange(cursor, cursor);
+    });
+  });
+
   window.selecionarPerfil = function(perfil){
     perfilSelecionado = perfil;
     document.getElementById("btn-perfil-motorista").classList.toggle("ativo", perfil==="motorista");
@@ -440,7 +506,6 @@
     btn.disabled = true; btn.textContent = "Entrando...";
     try{
       await signInWithEmailAndPassword(auth, email, senha);
-      // onAuthStateChanged cuida do resto
     }catch(e){
       erroEl.textContent = "E-mail ou senha inválidos.";
       erroEl.style.display = "block";
@@ -459,7 +524,6 @@
       document.getElementById("app-screen").style.display = "none";
       return;
     }
-    // Busca o perfil do usuário (definido manualmente na coleção /usuarios)
     const usuarioSnap = await getDoc(doc(db, "usuarios", user.uid));
     perfilUsuario = usuarioSnap.exists() ? usuarioSnap.data().perfil : "motorista";
 
@@ -479,18 +543,18 @@
     }
   });
 
-  // ---------- MOTORISTA ----------
   async function iniciarListenersMotorista(){
-    // KM atual do veículo (tempo real)
     onSnapshot(doc(db, "veiculos", VEICULO_ID), (snap)=>{
       if(snap.exists()){
         kmAtualVeiculo = snap.data().kmAtual;
+        kmUltimoAbastecimento = snap.data().kmUltimoAbastecimento ?? null;
         document.getElementById("km-atual-valor").textContent = kmAtualVeiculo?.toLocaleString("pt-BR") ?? "—";
+        document.getElementById("km-ultimo-abastecimento-valor").textContent = kmUltimoAbastecimento?.toLocaleString("pt-BR") ?? "—";
         document.getElementById("fv-km-inicial").textContent = kmAtualVeiculo?.toLocaleString("pt-BR") ?? "—";
+        document.getElementById("input-km-abastecimento").value = kmAtualVeiculo ?? "";
       }
     });
 
-    // Viagem em aberto (se existir)
     const q = query(collection(db, "registros"), where("status", "==", "aberto"));
     onSnapshot(q, (snap)=>{
       if(snap.empty){
@@ -517,14 +581,13 @@
     document.getElementById("status-badge").className = "status-badge aberta";
     document.getElementById("status-badge").innerHTML = '<span class="status-dot"></span>Viagem em andamento';
 
-    const rotulos = {visita_hospitalar:"Visita hospitalar", viagem:"Viagem", abastecimento:"Abastecimento", outro:"Outro"};
+    const rotulos = {visita_hospitalar:"Visita hospitalar", viagem:"Viagem (ida e volta)", outro:"Outro"};
+    document.getElementById("fv-usuario").textContent = viagemAberta.nomeUsuario || "—";
     document.getElementById("fv-tipo").textContent = rotulos[viagemAberta.tipo] || "—";
     document.getElementById("fv-itinerario").textContent = viagemAberta.itinerario || "—";
     const inicio = viagemAberta.horaInicial?.toDate ? viagemAberta.horaInicial.toDate() : null;
     document.getElementById("fv-inicio").textContent = inicio ? inicio.toLocaleString("pt-BR") : "—";
     document.getElementById("fv-km-inicial").textContent = viagemAberta.kmInicial?.toLocaleString("pt-BR") ?? "—";
-    document.getElementById("label-km-final").textContent =
-      viagemAberta.tipo === "abastecimento" ? "KM no momento do abastecimento" : "KM final (visor do painel)";
   }
 
   window.selecionarTipo = function(tipo){
@@ -535,8 +598,10 @@
   };
 
   window.iniciarViagem = async function(){
+    const nomeUsuario = document.getElementById("input-nome-usuario").value.trim().toUpperCase();
+    if(!nomeUsuario){ toast("Informe o nome do usuário do veículo.", "erro"); return; }
     if(!tipoSelecionado){ toast("Escolha o tipo de deslocamento.", "erro"); return; }
-    const itinerario = document.getElementById("input-itinerario").value.trim();
+    const itinerario = document.getElementById("input-itinerario").value.trim().toUpperCase();
     if(!itinerario){ toast("Informe o itinerário/destino.", "erro"); return; }
     if(kmAtualVeiculo == null){ toast("KM do veículo ainda não carregada, aguarde.", "erro"); return; }
 
@@ -544,6 +609,7 @@
       await addDoc(collection(db, "registros"), {
         status: "aberto",
         tipo: tipoSelecionado,
+        nomeUsuario,
         itinerario,
         kmInicial: kmAtualVeiculo,
         kmFinal: null,
@@ -555,6 +621,7 @@
         editadoEm: null
       });
       tipoSelecionado = null;
+      document.getElementById("input-nome-usuario").value = "";
       document.getElementById("input-itinerario").value = "";
       document.querySelectorAll(".tipo-btn").forEach(b=>b.classList.remove("selecionado"));
       toast("Viagem iniciada.", "sucesso");
@@ -588,12 +655,77 @@
     }
   };
 
-  // ---------- ADMIN ----------
+  window.alternarFormAbastecimento = function(){
+    const form = document.getElementById("form-abastecimento");
+    form.style.display = form.style.display === "block" ? "none" : "block";
+    if(form.style.display === "block" && kmAtualVeiculo != null){
+      document.getElementById("input-km-abastecimento").value = kmAtualVeiculo;
+    }
+  };
+
+  function atualizarPreviaAutonomia(){
+    const km = Number(document.getElementById("input-km-abastecimento").value);
+    const litros = Number(document.getElementById("input-litros").value);
+    const preview = document.getElementById("autonomia-preview");
+    if(km && litros && kmUltimoAbastecimento != null && km > kmUltimoAbastecimento){
+      const kmRodado = km - kmUltimoAbastecimento;
+      const autonomia = kmRodado / litros;
+      preview.textContent = kmRodado.toLocaleString("pt-BR") + " km rodados desde o último abastecimento -> autonomia de " + autonomia.toFixed(2) + " km/l";
+      preview.style.display = "block";
+    } else {
+      preview.style.display = "none";
+    }
+  }
+  ["input-km-abastecimento","input-litros"].forEach(id=>{
+    document.getElementById(id).addEventListener("input", atualizarPreviaAutonomia);
+  });
+
+  window.registrarAbastecimento = async function(){
+    const km = Number(document.getElementById("input-km-abastecimento").value);
+    const litros = Number(document.getElementById("input-litros").value);
+    const valorLitro = Number(document.getElementById("input-valor-litro").value);
+
+    if(!km){ toast("Informe a KM do abastecimento.", "erro"); return; }
+    if(!litros){ toast("Informe os litros abastecidos.", "erro"); return; }
+    if(!valorLitro){ toast("Informe o valor por litro.", "erro"); return; }
+
+    const valorTotal = litros * valorLitro;
+    let kmRodadoDesdeUltimo = null;
+    let autonomia = null;
+    if(kmUltimoAbastecimento != null && km > kmUltimoAbastecimento){
+      kmRodadoDesdeUltimo = km - kmUltimoAbastecimento;
+      autonomia = kmRodadoDesdeUltimo / litros;
+    }
+
+    try{
+      await addDoc(collection(db, "abastecimentos"), {
+        data: serverTimestamp(),
+        km, litros, valorLitro, valorTotal,
+        kmRodadoDesdeUltimo, autonomia,
+        viagemId: viagemAberta ? viagemAberta.id : null,
+        registradoPor: auth.currentUser.email
+      });
+      await setDoc(doc(db, "veiculos", VEICULO_ID), {
+        kmAtual: Math.max(km, kmAtualVeiculo || 0),
+        kmUltimoAbastecimento: km
+      }, { merge: true });
+
+      document.getElementById("input-litros").value = "";
+      document.getElementById("input-valor-litro").value = "";
+      document.getElementById("autonomia-preview").style.display = "none";
+      document.getElementById("form-abastecimento").style.display = "none";
+      toast("Abastecimento registrado.", "sucesso");
+    }catch(e){
+      console.error(e);
+      toast("Erro ao registrar abastecimento.", "erro");
+    }
+  };
+
   window.mudarAba = function(aba){
-    document.getElementById("tab-dashboard").classList.toggle("ativa", aba==="dashboard");
-    document.getElementById("tab-registros").classList.toggle("ativa", aba==="registros");
-    document.getElementById("aba-dashboard").style.display = aba==="dashboard" ? "block" : "none";
-    document.getElementById("aba-registros").style.display = aba==="registros" ? "block" : "none";
+    ["dashboard","registros","combustivel"].forEach(a=>{
+      document.getElementById("tab-"+a).classList.toggle("ativa", a===aba);
+      document.getElementById("aba-"+a).style.display = a===aba ? "block" : "none";
+    });
   };
 
   function inicializarFiltrosData(){
@@ -616,6 +748,7 @@
   }
 
   let registrosDoPeriodo = [];
+  let abastecimentosDoPeriodo = [];
 
   window.carregarDados = function(){
     const mes = Number(document.getElementById("filtro-mes").value);
@@ -624,18 +757,31 @@
     const fim = Timestamp.fromDate(new Date(ano, mes, 1, 0,0,0));
 
     if(unsubRegistros) unsubRegistros();
+    if(unsubAbastecimentos) unsubAbastecimentos();
 
-    const q = query(
+    const qRegistros = query(
       collection(db, "registros"),
       where("horaInicial", ">=", inicio),
       where("horaInicial", "<", fim),
       orderBy("horaInicial", "asc")
     );
-
-    unsubRegistros = onSnapshot(q, (snap)=>{
+    unsubRegistros = onSnapshot(qRegistros, (snap)=>{
       registrosDoPeriodo = snap.docs.map(d=>({ id:d.id, ...d.data() }));
       renderizarDashboard();
       renderizarTabela();
+    });
+
+    const qAbastecimentos = query(
+      collection(db, "abastecimentos"),
+      where("data", ">=", inicio),
+      where("data", "<", fim),
+      orderBy("data", "asc")
+    );
+    unsubAbastecimentos = onSnapshot(qAbastecimentos, (snap)=>{
+      abastecimentosDoPeriodo = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      renderizarDashboard();
+      renderizarTabela();
+      renderizarCombustivel();
     });
   };
 
@@ -643,16 +789,16 @@
     const fechados = registrosDoPeriodo.filter(r=>r.status==="fechado");
     const totalKm = fechados.reduce((s,r)=> s + (r.kmRodado||0), 0);
     const visitas = registrosDoPeriodo.filter(r=>r.tipo==="visita_hospitalar").length;
-    const abastecimentos = registrosDoPeriodo.filter(r=>r.tipo==="abastecimento").length;
+    const gastoCombustivel = abastecimentosDoPeriodo.reduce((s,a)=> s + (a.valorTotal||0), 0);
 
     document.getElementById("dash-total-km").textContent = totalKm.toLocaleString("pt-BR") + " km";
     document.getElementById("dash-viagens").textContent = registrosDoPeriodo.length;
     document.getElementById("dash-visitas").textContent = visitas;
-    document.getElementById("dash-abastecimentos").textContent = abastecimentos;
+    document.getElementById("dash-gasto-combustivel").textContent = formatarMoeda(gastoCombustivel);
   }
 
-  const rotulosTipo = {visita_hospitalar:"Visita hospitalar", viagem:"Viagem", abastecimento:"Abastecimento", outro:"Outro"};
-  const classeTipo = {visita_hospitalar:"visita", viagem:"viagem", abastecimento:"abastecimento", outro:"outro"};
+  const rotulosTipo = {visita_hospitalar:"Visita hospitalar", viagem:"Viagem (ida e volta)", outro:"Outro"};
+  const classeTipo = {visita_hospitalar:"visita", viagem:"viagem", outro:"outro"};
 
   function renderizarTabela(){
     const tbody = document.getElementById("tabela-registros-body");
@@ -665,17 +811,16 @@
       const dataObj = r.horaInicial?.toDate ? r.horaInicial.toDate() : null;
       const horaFimObj = r.horaFinal?.toDate ? r.horaFinal.toDate() : null;
 
-      tr.innerHTML = `
-        <td>${dataObj ? dataObj.toLocaleDateString("pt-BR") : "—"}</td>
-        <td>${dataObj ? dataObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—"}</td>
-        <td>${horaFimObj ? horaFimObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—"}</td>
-        <td><input class="editavel mono" data-id="${r.id}" data-campo="kmInicial" value="${r.kmInicial ?? ""}"></td>
-        <td><input class="editavel mono" data-id="${r.id}" data-campo="kmFinal" value="${r.kmFinal ?? ""}"></td>
-        <td class="mono">${r.kmRodado != null ? r.kmRodado.toLocaleString("pt-BR") : "—"}</td>
-        <td><span class="tipo-pill ${classeTipo[r.tipo]||"outro"}">${rotulosTipo[r.tipo]||r.tipo}</span></td>
-        <td><input class="editavel" data-id="${r.id}" data-campo="itinerario" value="${(r.itinerario||"").replace(/"/g,'&quot;')}"></td>
-        <td class="acoes-row"></td>
-      `;
+      tr.innerHTML =
+        "<td>" + (dataObj ? dataObj.toLocaleDateString("pt-BR") : "—") + "</td>" +
+        "<td>" + (dataObj ? dataObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—") + "</td>" +
+        "<td>" + (horaFimObj ? horaFimObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—") + "</td>" +
+        "<td><input class=\"editavel upper\" data-id=\"" + r.id + "\" data-campo=\"nomeUsuario\" value=\"" + (r.nomeUsuario||"").replace(/"/g,'&quot;') + "\"></td>" +
+        "<td><input class=\"editavel mono\" data-id=\"" + r.id + "\" data-campo=\"kmInicial\" value=\"" + (r.kmInicial ?? "") + "\"></td>" +
+        "<td><input class=\"editavel mono\" data-id=\"" + r.id + "\" data-campo=\"kmFinal\" value=\"" + (r.kmFinal ?? "") + "\"></td>" +
+        "<td class=\"mono\">" + (r.kmRodado != null ? r.kmRodado.toLocaleString("pt-BR") : "—") + "</td>" +
+        "<td><span class=\"tipo-pill " + (classeTipo[r.tipo]||"outro") + "\">" + (rotulosTipo[r.tipo]||r.tipo) + "</span></td>" +
+        "<td><input class=\"editavel upper\" data-id=\"" + r.id + "\" data-campo=\"itinerario\" value=\"" + (r.itinerario||"").replace(/"/g,'&quot;') + "\"></td>";
       tbody.appendChild(tr);
     });
 
@@ -685,8 +830,8 @@
         const campo = e.target.dataset.campo;
         let valor = e.target.value;
         if(campo === "kmInicial" || campo === "kmFinal") valor = Number(valor);
+        if(campo === "nomeUsuario" || campo === "itinerario") valor = valor.toUpperCase();
         const dados = { [campo]: valor, editadoPor: auth.currentUser.email, editadoEm: serverTimestamp() };
-        // recalcula km rodado se mudou km inicial/final
         const registro = registrosDoPeriodo.find(r=>r.id===id);
         if(registro && (campo==="kmInicial" || campo==="kmFinal")){
           const novoInicial = campo==="kmInicial" ? valor : registro.kmInicial;
@@ -706,7 +851,40 @@
     });
   }
 
-  // ---------- Impressão ----------
+  function renderizarCombustivel(){
+    const tbody = document.getElementById("tabela-combustivel-body");
+    const vazio = document.getElementById("combustivel-vazio");
+    tbody.innerHTML = "";
+    vazio.style.display = abastecimentosDoPeriodo.length === 0 ? "block" : "none";
+
+    const totalLitros = abastecimentosDoPeriodo.reduce((s,a)=> s + (a.litros||0), 0);
+    const totalGasto = abastecimentosDoPeriodo.reduce((s,a)=> s + (a.valorTotal||0), 0);
+    const comAutonomia = abastecimentosDoPeriodo.filter(a=>a.autonomia);
+    const autonomiaMedia = comAutonomia.length
+      ? comAutonomia.reduce((s,a)=> s + a.autonomia, 0) / comAutonomia.length
+      : null;
+
+    document.getElementById("dash-litros").textContent = totalLitros.toLocaleString("pt-BR",{maximumFractionDigits:1}) + " L";
+    document.getElementById("dash-gasto-total").textContent = formatarMoeda(totalGasto);
+    document.getElementById("dash-autonomia-media").textContent = autonomiaMedia ? autonomiaMedia.toFixed(2) + " km/l" : "—";
+
+    abastecimentosDoPeriodo.forEach(a=>{
+      const tr = document.createElement("tr");
+      const dataObj = a.data?.toDate ? a.data.toDate() : null;
+      const registroLigado = a.viagemId ? registrosDoPeriodo.find(r=>r.id===a.viagemId) : null;
+      const viagemVinculada = a.viagemId ? (registroLigado ? registroLigado.itinerario : "Viagem fora do período") : "—";
+      tr.innerHTML =
+        "<td>" + (dataObj ? dataObj.toLocaleString("pt-BR") : "—") + "</td>" +
+        "<td class=\"mono\">" + (a.km?.toLocaleString("pt-BR") ?? "—") + "</td>" +
+        "<td class=\"mono\">" + (a.litros?.toLocaleString("pt-BR",{maximumFractionDigits:2}) ?? "—") + "</td>" +
+        "<td class=\"mono\">" + formatarMoeda(a.valorLitro) + "</td>" +
+        "<td class=\"mono\">" + formatarMoeda(a.valorTotal) + "</td>" +
+        "<td class=\"mono\">" + (a.autonomia ? a.autonomia.toFixed(2)+" km/l" : "—") + "</td>" +
+        "<td>" + viagemVinculada + "</td>";
+      tbody.appendChild(tr);
+    });
+  }
+
   window.gerarImpressao = function(){
     const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
     const mes = Number(document.getElementById("filtro-mes").value);
@@ -724,25 +902,26 @@
       if(r){
         const dataObj = r.horaInicial?.toDate ? r.horaInicial.toDate() : null;
         const horaFimObj = r.horaFinal?.toDate ? r.horaFinal.toDate() : null;
-        tr.innerHTML = `
-          <td>${dataObj ? dataObj.toLocaleDateString("pt-BR") : ""}</td>
-          <td>${dataObj ? dataObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : ""}</td>
-          <td>${horaFimObj ? horaFimObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : ""}</td>
-          <td>${r.kmInicial ?? ""}</td>
-          <td>${r.kmFinal ?? ""}</td>
-          <td>${r.tipo === "abastecimento" ? (r.kmFinal ?? "") : ""}</td>
-          <td></td>
-          <td class="itinerario">${r.itinerario ?? ""}</td>
-        `;
+        const abastecimentosLigados = abastecimentosDoPeriodo.filter(a=>a.viagemId === r.id);
+        const kmAbastecimento = abastecimentosLigados.map(a=>a.km?.toLocaleString("pt-BR")).join(" / ");
+        tr.innerHTML =
+          "<td>" + (dataObj ? dataObj.toLocaleDateString("pt-BR") : "") + "</td>" +
+          "<td>" + (dataObj ? dataObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "") + "</td>" +
+          "<td>" + (horaFimObj ? horaFimObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "") + "</td>" +
+          "<td>" + (r.kmInicial ?? "") + "</td>" +
+          "<td>" + (r.kmFinal ?? "") + "</td>" +
+          "<td>" + kmAbastecimento + "</td>" +
+          "<td class=\"usuario\">" + (r.nomeUsuario ?? "") + "</td>" +
+          "<td></td>" +
+          "<td class=\"itinerario\">" + (r.itinerario ?? "") + "</td>";
       } else {
-        tr.innerHTML = `<td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>`;
+        tr.innerHTML = "<td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>";
       }
       tbody.appendChild(tr);
     }
     window.print();
   };
 
-  // Registra o service worker (PWA)
   if("serviceWorker" in navigator){
     window.addEventListener("load", ()=>{
       navigator.serviceWorker.register("sw.js").catch(()=>{});
