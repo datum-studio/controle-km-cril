@@ -218,7 +218,8 @@
   .toast.sucesso{background:var(--verde);}
 
   #print-area{display:none;}
-  @page{ size: landscape; margin: 10mm 10mm 14mm 10mm; }
+  @page{ size: landscape; margin: 10mm 10mm 14mm 10mm; counter-increment: page; }
+  html{counter-reset: page 0;}
   @media print{
     body *{visibility:hidden;}
     #print-area, #print-area *{visibility:visible;}
@@ -234,7 +235,7 @@
     table.print-tabela td.itinerario{text-align:left;}
     .print-logo{height:30px; margin:0 auto 6px;}
     .print-footer{position:fixed; bottom:2mm; left:0; right:0; text-align:center; font-size:9px; color:#333;}
-    .print-footer::after{content: "Página " counter(page) " de " counter(pages);}
+    .print-footer::after{content: "Página " counter(page);}
   }
 </style>
 </head>
@@ -970,23 +971,41 @@
 
     const tbody = document.getElementById("print-tabela-body");
     tbody.innerHTML = "";
+
+    const linhas = [];
+    registrosDoPeriodo.forEach(r=>{
+      let horaAnterior = r.horaInicial?.toDate ? r.horaInicial.toDate() : null;
+      let kmAnterior = r.kmInicial;
+      (r.paradas || []).forEach(p=>{
+        const horaParada = p.hora?.toDate ? p.hora.toDate() : (p.hora instanceof Date ? p.hora : null);
+        linhas.push({
+          data: horaParada || horaAnterior,
+          horaInicial: horaAnterior,
+          horaFinal: horaParada,
+          kmInicial: kmAnterior,
+          kmFinal: p.km,
+          itinerario: p.local
+        });
+        horaAnterior = horaParada;
+        kmAnterior = p.km;
+      });
+    });
+
     const linhasMinimas = 20;
-    const total = Math.max(registrosDoPeriodo.length, linhasMinimas);
+    const total = Math.max(linhas.length, linhasMinimas);
 
     for(let i=0; i<total; i++){
-      const r = registrosDoPeriodo[i];
+      const l = linhas[i];
       const tr = document.createElement("tr");
-      if(r){
-        const dataObj = r.horaInicial?.toDate ? r.horaInicial.toDate() : null;
-        const horaFimObj = r.horaFinal?.toDate ? r.horaFinal.toDate() : null;
+      if(l){
         tr.innerHTML =
-          "<td>" + (dataObj ? dataObj.toLocaleDateString("pt-BR") : "") + "</td>" +
-          "<td>" + (dataObj ? dataObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "") + "</td>" +
-          "<td>" + (horaFimObj ? horaFimObj.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "") + "</td>" +
-          "<td>" + (r.kmInicial ?? "") + "</td>" +
-          "<td>" + (r.kmFinal ?? "") + "</td>" +
+          "<td>" + (l.data ? l.data.toLocaleDateString("pt-BR") : "") + "</td>" +
+          "<td>" + (l.horaInicial ? l.horaInicial.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "") + "</td>" +
+          "<td>" + (l.horaFinal ? l.horaFinal.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "") + "</td>" +
+          "<td>" + (l.kmInicial ?? "") + "</td>" +
+          "<td>" + (l.kmFinal ?? "") + "</td>" +
           "<td></td>" +
-          "<td class=\"itinerario\">" + resumoParadas(r.paradas) + "</td>";
+          "<td class=\"itinerario\">" + (l.itinerario ?? "") + "</td>";
       } else {
         tr.innerHTML = "<td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td>";
       }
