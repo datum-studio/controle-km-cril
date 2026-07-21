@@ -5,10 +5,13 @@ PWA para controle de quilometragem e abastecimento do veículo da Central de Reg
 ## O que já está pronto (v1)
 
 - Login com dois perfis: **motorista** (registra viagens) e **admin** (edita, vê dashboard, gera impressão)
-- Motorista: iniciar/finalizar viagem, com data/hora automáticas e KM inicial puxada do último registro
+- Motorista inicia uma viagem escolhendo o tipo (visita hospitalar, viagem ou outro) — data/hora e KM inicial automáticas
+- **Múltiplas paradas por viagem**: enquanto a viagem está aberta, o motorista registra cada parada (local + KM ao chegar), quantas forem necessárias — por exemplo, várias visitas em hospitais diferentes, ou parada no hotel/reunião/visita dentro de uma mesma viagem. A viagem só é fechada quando o motorista clicar em "Finalizar", usando a KM da última parada como KM final
 - Trava de uma viagem aberta por vez
-- Admin: dashboard com KM total, viagens por tipo; tabela de registros editável por mês/ano
-- Geração de página de impressão no layout da planilha original, para colher assinatura física
+- **Abastecimento avulso**: pode ser registrado a qualquer momento, mesmo com uma viagem em aberto (fica vinculado a ela se houver). Registra litros e valor por litro, calcula o valor total gasto e a autonomia (km/l) desde o último abastecimento
+- Motorista vê a KM atual do veículo e a KM do último abastecimento na tela
+- Admin: dashboard com KM total, viagens registradas, paradas registradas e gasto com combustível; aba **Registros** com KM inicial/final editável e resumo das paradas de cada viagem; aba **Combustível** com litros, gasto total, autonomia média e tabela detalhada
+- Geração de página de impressão em **paisagem**, com numeração de página no rodapé, no layout da planilha original (itinerário mostra a lista de paradas da viagem; sem litros/valor de combustível — isso fica só no painel admin), para colher assinatura física
 - Estrutura de PWA (manifest + service worker) pronta para "instalar" no celular/tablet do motorista
 
 **Fora do escopo desta v1** (combinado com a Débora): OCR de leitura da KM, GPS, assinatura digital no app — ficam para uma v2.
@@ -83,13 +86,14 @@ Mesmo padrão dos outros projetos Datum Studio: subir esta pasta para um reposit
 ```
 veiculos/polo-track
   kmAtual: number
+  kmUltimoAbastecimento: number
 
 registros/{id}
   status: "aberto" | "fechado"
-  tipo: "visita_hospitalar" | "viagem" | "abastecimento" | "outro"
-  itinerario: string
+  tipo: "visita_hospitalar" | "viagem" | "outro"
+  paradas: array de { local: string (CAIXA ALTA), km: number, hora: Date }
   kmInicial: number
-  kmFinal: number | null
+  kmFinal: number | null (KM da última parada, no momento de finalizar)
   kmRodado: number | null
   horaInicial: timestamp
   horaFinal: timestamp | null
@@ -97,9 +101,24 @@ registros/{id}
   editadoPor: string | null
   editadoEm: timestamp | null
 
+abastecimentos/{id}
+  data: timestamp
+  km: number
+  litros: number
+  valorLitro: number
+  valorTotal: number (litros × valorLitro)
+  kmRodadoDesdeUltimo: number | null
+  autonomia: number | null (km/l desde o abastecimento anterior)
+  viagemId: string | null (registro de viagem em aberto no momento, se houver)
+  registradoPor: string (e-mail)
+
 usuarios/{uid}
   perfil: "motorista" | "admin"
 ```
+
+Observações:
+- Uma viagem pode ter quantas paradas forem necessárias (ex.: visitar 3 hospitais diferentes, ou parar no hotel + reunião + hospital numa mesma viagem). Cada parada registra local e KM; a viagem só fecha quando o motorista finalizar, usando a KM da última parada.
+- "abastecimento" é uma ação independente — disponível a qualquer momento, inclusive durante uma viagem em aberto.
 
 ## Próximos passos sugeridos (v2)
 - OCR de leitura da KM via foto (Tesseract.js ou Google Cloud Vision)
