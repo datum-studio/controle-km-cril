@@ -11,10 +11,13 @@ PWA para controle de quilometragem e abastecimento do veículo da Central de Reg
 - **Abastecimento avulso**: pode ser registrado a qualquer momento, mesmo com uma viagem em aberto (fica vinculado a ela se houver). Registra litros e valor por litro, calcula o valor total gasto e a autonomia (km/l) desde o último abastecimento
 - Motorista vê a KM atual do veículo e a KM do último abastecimento na tela
 - Admin: dashboard com KM total, viagens registradas, paradas registradas e gasto com combustível; aba **Registros** com KM inicial/final editável e resumo das paradas de cada viagem; aba **Combustível** com litros, gasto total, autonomia média e tabela detalhada
-- Geração de página de impressão em **paisagem**, com numeração de página no rodapé, no layout da planilha original (itinerário mostra a lista de paradas da viagem; sem litros/valor de combustível — isso fica só no painel admin), para colher assinatura física
-- Estrutura de PWA (manifest + service worker) pronta para "instalar" no celular/tablet do motorista
+- Geração de página de impressão em **paisagem**, com numeração de página no rodapé, no layout da planilha original (cada parada vira sua própria linha, com data/hora/KM daquele trecho específico; sem litros/valor de combustível — isso fica só no painel admin), para colher assinatura física
+- **Se o motorista esquecer de registrar algo**: (1) o motorista pode escolher manualmente o horário de cada parada, não fica preso ao "agora"; (2) o admin pode adicionar, corrigir ou remover paradas de qualquer viagem já registrada, na aba Registros; (3) o painel do admin mostra um aviso quando existe uma viagem em aberto há mais de 12h, sinal de que o motorista pode ter esquecido de finalizar
+- **Leitura de KM por foto (OCR)**: usando Tesseract.js (roda no navegador, sem custo), disponível em todos os campos de KM do app — parada do motorista, abastecimento e edição de paradas do admin. O número lido sempre fica editável antes de salvar
+- **KM do cartão de abastecimento**: existe um deslocamento fixo (resto de KM de um carro anterior) que se soma à KM real do carro para dar o número que o motorista informa ao posto. O admin configura esse deslocamento na aba Combustível; o motorista só vê o resultado já somado, em destaque, assim que digita ou lê a KM real do abastecimento
+- Estrutura de PWA (manifest + service worker) pronta para "instalar" no celular/tablet do motorista, com ícone próprio gerado a partir da logo da CRIL
 
-**Fora do escopo desta v1** (combinado com a Débora): OCR de leitura da KM, GPS, assinatura digital no app — ficam para uma v2.
+**Fora do escopo desta v1** (combinado com a Débora): GPS, assinatura digital no app — ficam para uma v2.
 
 ## Passo a passo antes do primeiro deploy
 
