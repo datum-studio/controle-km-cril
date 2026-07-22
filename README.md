@@ -5,19 +5,19 @@ PWA para controle de quilometragem e abastecimento do veículo da Central de Reg
 ## O que já está pronto (v1)
 
 - Login com dois perfis: **motorista** (registra viagens) e **admin** (edita, vê dashboard, gera impressão)
-- Motorista inicia uma viagem escolhendo o tipo (visita hospitalar, viagem ou outro) — data/hora e KM inicial automáticas
-- **Múltiplas paradas por viagem**: enquanto a viagem está aberta, o motorista registra cada parada (local + KM ao chegar), quantas forem necessárias — por exemplo, várias visitas em hospitais diferentes, ou parada no hotel/reunião/visita dentro de uma mesma viagem. A viagem só é fechada quando o motorista clicar em "Finalizar", usando a KM da última parada como KM final
+- Motorista inicia uma viagem informando o **nome do usuário do veículo** (lista pré-cadastrada + opção de digitar) e escolhendo o tipo (visita hospitalar, viagem ou outro) — data/hora e KM inicial automáticas
+- **Múltiplas paradas por viagem**: enquanto a viagem está aberta, o motorista registra cada parada (local + KM ao chegar), quantas forem necessárias. Em visitas hospitalares, o local é escolhido numa lista de hospitais de Juazeiro-BA e Petrolina-PE (sempre com opção de digitar outro local manualmente)
+- **Retorno à CRIL obrigatório em visita hospitalar e outro**: pra finalizar, o motorista precisa confirmar a chegada na CRIL informando a KM, ou explicitamente confirmar que está finalizando sem retornar (com um alerta de confirmação). Viagens (fora da cidade) ficam de fora dessa regra, já que podem terminar em outro lugar (hotel, por exemplo)
 - Trava de uma viagem aberta por vez
 - **Abastecimento avulso**: pode ser registrado a qualquer momento, mesmo com uma viagem em aberto (fica vinculado a ela se houver). Registra litros e valor por litro, calcula o valor total gasto e a autonomia (km/l) desde o último abastecimento
 - Motorista vê a KM atual do veículo e a KM do último abastecimento na tela
-- Admin: dashboard com KM total, viagens registradas, paradas registradas e gasto com combustível; aba **Registros** com KM inicial/final editável e resumo das paradas de cada viagem; aba **Combustível** com litros, gasto total, autonomia média e tabela detalhada
-- Geração de página de impressão em **paisagem**, com numeração de página no rodapé, no layout da planilha original (cada parada vira sua própria linha, com data/hora/KM daquele trecho específico; sem litros/valor de combustível — isso fica só no painel admin), para colher assinatura física
+- Admin: dashboard com KM total, viagens registradas, paradas registradas e gasto com combustível; aba **Registros** com KM inicial/final editável, edição completa das paradas (local, KM, horário) e do nome do usuário de cada viagem; aba **Combustível** com litros, gasto total, autonomia média e tabela detalhada
+- Geração de página de impressão em **paisagem**, com numeração de página no rodapé, no layout da planilha original (cada parada vira sua própria linha, com data/hora/KM daquele trecho específico, e o nome do usuário aparece entre parênteses ao lado do local — ex.: "HOSPITAL REGIONAL DE JUAZEIRO (KATIA)"; sem litros/valor de combustível, que fica só no painel admin), para colher assinatura física
 - **Se o motorista esquecer de registrar algo**: (1) o motorista pode escolher manualmente o horário de cada parada, não fica preso ao "agora"; (2) o admin pode adicionar, corrigir ou remover paradas de qualquer viagem já registrada, na aba Registros; (3) o painel do admin mostra um aviso quando existe uma viagem em aberto há mais de 12h, sinal de que o motorista pode ter esquecido de finalizar
-- **Leitura de KM por foto (OCR)**: usando Tesseract.js (roda no navegador, sem custo), disponível em todos os campos de KM do app — parada do motorista, abastecimento e edição de paradas do admin. O número lido sempre fica editável antes de salvar
-- **KM do cartão de abastecimento**: existe um deslocamento fixo (resto de KM de um carro anterior) que se soma à KM real do carro para dar o número que o motorista informa ao posto. O admin configura esse deslocamento na aba Combustível; o motorista só vê o resultado já somado, em destaque, assim que digita ou lê a KM real do abastecimento
+- **KM do cartão de abastecimento**: existe um deslocamento fixo (resto de KM de um carro anterior) que se soma à KM real do carro para dar o número que o motorista informa ao posto. O admin configura esse deslocamento na aba Combustível; o motorista só vê o resultado já somado, em destaque, assim que digita a KM real do abastecimento
 - Estrutura de PWA (manifest + service worker) pronta para "instalar" no celular/tablet do motorista, com ícone próprio gerado a partir da logo da CRIL
 
-**Fora do escopo desta v1** (combinado com a Débora): GPS, assinatura digital no app — ficam para uma v2.
+**Fora do escopo desta v1** (combinado com a Débora): OCR de leitura da KM (testado e removido — não funcionou bem), GPS, assinatura digital no app — ficam para uma v2, ou não avançam mais.
 
 ## Passo a passo antes do primeiro deploy
 
@@ -90,10 +90,12 @@ Mesmo padrão dos outros projetos Datum Studio: subir esta pasta para um reposit
 veiculos/polo-track
   kmAtual: number
   kmUltimoAbastecimento: number
+  deslocamentoCartao: number (deslocamento fixo somado à KM real no abastecimento, só o admin edita)
 
 registros/{id}
   status: "aberto" | "fechado"
   tipo: "visita_hospitalar" | "viagem" | "outro"
+  nomeUsuario: string (CAIXA ALTA — um nome por viagem inteira, lista pré-cadastrada + digitação livre)
   paradas: array de { local: string (CAIXA ALTA), km: number, hora: Date }
   kmInicial: number
   kmFinal: number | null (KM da última parada, no momento de finalizar)
@@ -120,8 +122,10 @@ usuarios/{uid}
 ```
 
 Observações:
-- Uma viagem pode ter quantas paradas forem necessárias (ex.: visitar 3 hospitais diferentes, ou parar no hotel + reunião + hospital numa mesma viagem). Cada parada registra local e KM; a viagem só fecha quando o motorista finalizar, usando a KM da última parada.
+- Uma viagem pode ter quantas paradas forem necessárias (ex.: visitar 3 hospitais diferentes, ou parar no hotel + reunião + hospital numa mesma viagem). Cada parada registra local e KM.
+- Em visita hospitalar e outro, finalizar exige confirmar a chegada na CRIL (com KM) ou confirmar explicitamente que não retornou. Em viagem, finaliza direto com a KM da última parada.
 - "abastecimento" é uma ação independente — disponível a qualquer momento, inclusive durante uma viagem em aberto.
+- As listas de hospitais (`HOSPITAIS`) e usuários (`USUARIOS`) sugeridos ficam no início do `<script>` do `index.html` — para adicionar/editar nomes, é só editar esses dois arrays diretamente no código.
 
 ## Próximos passos sugeridos (v2)
 - OCR de leitura da KM via foto (Tesseract.js ou Google Cloud Vision)

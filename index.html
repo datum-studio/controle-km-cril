@@ -223,13 +223,6 @@
   .pe-local{flex:2; min-width:140px; text-transform:uppercase;}
   .pe-km{flex:1; min-width:90px;}
   .pe-hora{flex:1.4; min-width:150px;}
-
-  .btn-ocr{
-    display:inline-block; margin-top:6px; font-size:12px; font-weight:700;
-    color:var(--azul-600); cursor:pointer; padding:6px 0;
-  }
-  .ocr-status{display:block; font-size:12px; color:var(--texto-2); margin-top:2px;}
-  .pe-ocr{font-size:10.5px; padding:2px 6px; color:var(--azul-600); font-weight:700; cursor:pointer; background:none; border:1px solid var(--azul-600); border-radius:5px;}
   .vazio{text-align:center; padding:40px 20px; color:var(--texto-2); font-size:13.5px;}
 
   .toast{
@@ -263,7 +256,6 @@
     .print-footer::after{content: "Página " counter(page);}
   }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -322,6 +314,14 @@
 
         <div id="bloco-iniciar">
           <div class="field">
+            <label>Nome do usuário do veículo</label>
+            <select id="select-nome-usuario" onchange="window.alternarUsuarioOutro()"></select>
+          </div>
+          <div class="field" id="campo-usuario-texto" style="display:none;">
+            <label>Digite o nome</label>
+            <input type="text" id="input-nome-usuario" class="upper" placeholder="NOME DE QUEM VAI USAR O CARRO">
+          </div>
+          <div class="field">
             <label>Tipo de deslocamento</label>
             <div class="tipo-opcoes">
               <button class="tipo-btn" data-tipo="visita_hospitalar" onclick="window.selecionarTipo('visita_hospitalar')">Visita hospitalar</button>
@@ -334,6 +334,7 @@
 
         <div id="bloco-finalizar" style="display:none;">
           <div class="viagem-aberta-box">
+            <div class="linha"><span>Usuário</span><b id="fv-usuario">—</b></div>
             <div class="linha"><span>Tipo</span><b id="fv-tipo">—</b></div>
             <div class="linha"><span>Início</span><b id="fv-inicio">—</b></div>
             <div class="linha"><span>KM inicial</span><b id="fv-km-inicial" class="mono">—</b></div>
@@ -344,23 +345,37 @@
             <div class="parada-vazia">Nenhuma parada registrada ainda.</div>
           </div>
 
-          <div class="field">
+          <div class="field" id="campo-local-hospital" style="display:none;">
+            <label>Hospital desta parada</label>
+            <select id="select-parada-hospital" onchange="window.alternarLocalOutro()"></select>
+          </div>
+          <div class="field" id="campo-local-texto">
             <label>Local desta parada</label>
             <input type="text" id="input-parada-local" class="upper" placeholder="EX.: HOSPITAL REGIONAL DE JUAZEIRO">
           </div>
           <div class="field">
             <label>KM ao chegar nesta parada</label>
             <input type="number" id="input-parada-km" placeholder="Ex.: 45210" inputmode="numeric">
-            <label class="btn-ocr" for="foto-parada-km">📷 Ler KM da foto</label>
-            <input type="file" id="foto-parada-km" accept="image/*" capture="environment" style="display:none">
-            <span class="ocr-status" id="ocr-status-parada-km"></span>
           </div>
           <div class="field">
             <label>Horário desta parada</label>
             <input type="datetime-local" id="input-parada-hora">
           </div>
           <button class="btn btn-secundario" style="width:100%; margin-bottom:12px;" onclick="window.registrarParada()">Registrar parada</button>
-          <button class="btn btn-sucesso" style="width:100%;" onclick="window.finalizarViagem()">Finalizar viagem</button>
+
+          <div id="finalizar-com-cril">
+            <div id="bloco-retorno-cril" style="display:none; margin-bottom:12px;">
+              <div class="field">
+                <label>KM ao chegar na CRIL</label>
+                <input type="number" id="input-km-cril" placeholder="Ex.: 45210" inputmode="numeric">
+              </div>
+              <button class="btn btn-sucesso" style="width:100%;" onclick="window.confirmarRetornoCril()">Confirmar chegada na CRIL e finalizar</button>
+            </div>
+            <button class="btn btn-sucesso" style="width:100%; margin-bottom:8px;" onclick="window.alternarBlocoRetornoCril()">Cheguei na CRIL</button>
+            <button class="btn btn-fantasma" style="width:100%;" onclick="window.finalizarSemRetorno()">Finalizar sem retornar à CRIL</button>
+          </div>
+
+          <button class="btn btn-sucesso" style="width:100%; display:none;" id="btn-finalizar-viagem-simples" onclick="window.finalizarViagem()">Finalizar viagem</button>
         </div>
 
         <hr class="divisor">
@@ -370,9 +385,6 @@
           <div class="field">
             <label>KM no momento do abastecimento</label>
             <input type="number" id="input-km-abastecimento" inputmode="numeric">
-            <label class="btn-ocr" for="foto-km-abastecimento">📷 Ler KM da foto</label>
-            <input type="file" id="foto-km-abastecimento" accept="image/*" capture="environment" style="display:none">
-            <span class="ocr-status" id="ocr-status-km-abastecimento"></span>
           </div>
           <div class="km-cartao-preview" id="km-cartao-preview" style="display:none;"></div>
           <div class="grid-2">
@@ -535,6 +547,74 @@
   const db = getFirestore(app);
 
   const VEICULO_ID = "polo-track";
+
+  // Listas de sugestão — sempre com opção de digitar livremente. Editar aqui se precisar atualizar.
+  const HOSPITAIS = [
+    "HOSPITAL REGIONAL DE JUAZEIRO - BA",
+    "HOSPITAL PROMATRE - JUAZEIRO - BA",
+    "IVDRBA - INSTITUTO VIVER DR ROBERTO BASTO DE ALENCAR",
+    "HOSPITAL MATERNO INFANTIL DE JUAZEIRO - BA",
+    "UNIDADE DE ATENDIMENTO PEDIÁTRICO - JUAZEIRO - BA",
+    "UPA DR JOÃO OLIVEIRA - JUAZEIRO - BA",
+    "HOSPITAL UNIVERSITÁRIO DE PETROLINA - PE",
+    "HOSPITAL DOM MALAN - PETROLINA - PE",
+    "HOSPITAL DOM TOMÁS - PETROLINA - PE",
+    "INSTITUTO MEMORIAL DO VALE - PETROLINA - PE",
+    "UPA 24H DE PETROLINA - PE"
+  ];
+
+  const USUARIOS = [
+    "ELIETE CASTRO",
+    "KATIA KALENE",
+    "MARIA GRASIELA",
+    "ELIZANGELA GUIMARÃES",
+    "DR ANTONIO REIS",
+    "DRA ANA CATARINA",
+    "DÉBORA LOPES",
+    "MARCELO CARVALHO"
+  ];
+
+  function popularSelect(selectEl, opcoes){
+    selectEl.innerHTML = "";
+    const optVazia = document.createElement("option");
+    optVazia.value = ""; optVazia.textContent = "Selecione...";
+    selectEl.appendChild(optVazia);
+    opcoes.forEach(o=>{
+      const opt = document.createElement("option");
+      opt.value = o; opt.textContent = o;
+      selectEl.appendChild(opt);
+    });
+    const optOutro = document.createElement("option");
+    optOutro.value = "OUTRO"; optOutro.textContent = "Outro (digitar)";
+    selectEl.appendChild(optOutro);
+  }
+  popularSelect(document.getElementById("select-nome-usuario"), USUARIOS);
+  popularSelect(document.getElementById("select-parada-hospital"), HOSPITAIS);
+
+  window.alternarUsuarioOutro = function(){
+    const sel = document.getElementById("select-nome-usuario");
+    document.getElementById("campo-usuario-texto").style.display = sel.value === "OUTRO" ? "block" : "none";
+  };
+
+  window.alternarLocalOutro = function(){
+    const sel = document.getElementById("select-parada-hospital");
+    document.getElementById("campo-local-texto").style.display = sel.value === "OUTRO" ? "block" : "none";
+  };
+
+  function obterNomeUsuarioSelecionado(){
+    const sel = document.getElementById("select-nome-usuario");
+    if(sel.value && sel.value !== "OUTRO") return sel.value;
+    return document.getElementById("input-nome-usuario").value.trim().toUpperCase();
+  }
+
+  function obterLocalParada(){
+    if(viagemAberta && viagemAberta.tipo === "visita_hospitalar"){
+      const sel = document.getElementById("select-parada-hospital");
+      if(sel.value && sel.value !== "OUTRO") return sel.value;
+    }
+    return document.getElementById("input-parada-local").value.trim().toUpperCase();
+  }
+
   let perfilSelecionado = "motorista";
   let perfilUsuario = null;
   let tipoSelecionado = null;
@@ -699,10 +779,20 @@
     document.getElementById("status-badge").innerHTML = '<span class="status-dot"></span>Viagem em andamento';
 
     const rotulos = {visita_hospitalar:"Visita hospitalar", viagem:"Viagem", outro:"Outro"};
+    document.getElementById("fv-usuario").textContent = viagemAberta.nomeUsuario || "—";
     document.getElementById("fv-tipo").textContent = rotulos[viagemAberta.tipo] || "—";
     const inicio = viagemAberta.horaInicial?.toDate ? viagemAberta.horaInicial.toDate() : null;
     document.getElementById("fv-inicio").textContent = inicio ? inicio.toLocaleString("pt-BR") : "—";
     document.getElementById("fv-km-inicial").textContent = viagemAberta.kmInicial?.toLocaleString("pt-BR") ?? "—";
+
+    const modoHospital = viagemAberta.tipo === "visita_hospitalar";
+    document.getElementById("campo-local-hospital").style.display = modoHospital ? "block" : "none";
+    const selHospital = document.getElementById("select-parada-hospital");
+    document.getElementById("campo-local-texto").style.display = (!modoHospital || selHospital.value === "OUTRO") ? "block" : "none";
+
+    const permiteRetornoCril = viagemAberta.tipo !== "viagem";
+    document.getElementById("finalizar-com-cril").style.display = permiteRetornoCril ? "block" : "none";
+    document.getElementById("btn-finalizar-viagem-simples").style.display = permiteRetornoCril ? "none" : "block";
 
     const lista = document.getElementById("paradas-lista");
     const paradas = viagemAberta.paradas || [];
@@ -731,53 +821,6 @@
     return agora.toISOString().slice(0,16);
   }
 
-  async function lerKmDaFoto(file, inputEl, statusEl){
-    if(!file) return;
-    if(statusEl) statusEl.textContent = "Lendo a KM da foto...";
-    try{
-      const { data } = await Tesseract.recognize(file, "eng", {
-        tessedit_char_whitelist: "0123456789"
-      });
-      const digitos = (data.text.match(/\d+/g) || []).sort((a,b)=>b.length-a.length)[0];
-      if(digitos){
-        inputEl.value = digitos;
-        inputEl.dispatchEvent(new Event("input"));
-        toast("KM lida: " + digitos + " — confira antes de salvar.", "sucesso");
-      } else {
-        toast("Não consegui ler números na foto. Digite manualmente.", "erro");
-      }
-    }catch(e){
-      console.error(e);
-      toast("Erro ao processar a foto.", "erro");
-    }finally{
-      if(statusEl) statusEl.textContent = "";
-    }
-  }
-
-  function ligarOcr(fotoId, inputId, statusId){
-    const fotoEl = document.getElementById(fotoId);
-    const inputEl = document.getElementById(inputId);
-    const statusEl = statusId ? document.getElementById(statusId) : null;
-    if(!fotoEl || !inputEl) return;
-    fotoEl.addEventListener("change", ()=>{
-      const file = fotoEl.files[0];
-      lerKmDaFoto(file, inputEl, statusEl);
-      fotoEl.value = "";
-    });
-  }
-  ligarOcr("foto-parada-km", "input-parada-km", "ocr-status-parada-km");
-  ligarOcr("foto-km-abastecimento", "input-km-abastecimento", "ocr-status-km-abastecimento");
-
-  document.addEventListener("change", (e)=>{
-    if(e.target.matches('input[type="file"][data-pe-registro]')){
-      const idx = e.target.dataset.peKmAlvo;
-      const container = e.target.closest(".parada-edit-linha");
-      const inputKm = container.querySelector(".pe-km");
-      lerKmDaFoto(e.target.files[0], inputKm, null);
-      e.target.value = "";
-    }
-  });
-
   window.selecionarTipo = function(tipo){
     tipoSelecionado = tipo;
     document.querySelectorAll(".tipo-btn").forEach(b=>{
@@ -786,6 +829,8 @@
   };
 
   window.iniciarViagem = async function(){
+    const nomeUsuario = obterNomeUsuarioSelecionado();
+    if(!nomeUsuario){ toast("Informe o nome do usuário do veículo.", "erro"); return; }
     if(!tipoSelecionado){ toast("Escolha o tipo de deslocamento.", "erro"); return; }
     if(kmAtualVeiculo == null){ toast("KM do veículo ainda não carregada, aguarde.", "erro"); return; }
 
@@ -793,6 +838,7 @@
       await addDoc(collection(db, "registros"), {
         status: "aberto",
         tipo: tipoSelecionado,
+        nomeUsuario,
         paradas: [],
         kmInicial: kmAtualVeiculo,
         kmFinal: null,
@@ -805,6 +851,9 @@
       });
       tipoSelecionado = null;
       document.querySelectorAll(".tipo-btn").forEach(b=>b.classList.remove("selecionado"));
+      document.getElementById("select-nome-usuario").value = "";
+      document.getElementById("input-nome-usuario").value = "";
+      document.getElementById("campo-usuario-texto").style.display = "none";
       toast("Viagem iniciada.", "sucesso");
     }catch(e){
       console.error(e);
@@ -813,7 +862,7 @@
   };
 
   window.registrarParada = async function(){
-    const local = document.getElementById("input-parada-local").value.trim().toUpperCase();
+    const local = obterLocalParada();
     const km = Number(document.getElementById("input-parada-km").value);
     const horaInput = document.getElementById("input-parada-hora").value;
     if(!local){ toast("Informe o local desta parada.", "erro"); return; }
@@ -830,7 +879,11 @@
         paradas: arrayUnion({ local, km, hora })
       });
       document.getElementById("input-parada-local").value = "";
+      document.getElementById("select-parada-hospital").value = "";
       document.getElementById("input-parada-hora").value = dataHoraLocalAgora();
+      if(viagemAberta.tipo === "visita_hospitalar"){
+        document.getElementById("campo-local-texto").style.display = "none";
+      }
       toast("Parada registrada.", "sucesso");
     }catch(e){
       console.error(e);
@@ -838,13 +891,54 @@
     }
   };
 
-  window.finalizarViagem = async function(){
+  window.alternarBlocoRetornoCril = function(){
+    const bloco = document.getElementById("bloco-retorno-cril");
+    const mostrando = bloco.style.display === "block";
+    bloco.style.display = mostrando ? "none" : "block";
+    if(!mostrando){
+      document.getElementById("input-km-cril").value = ultimaKmConhecida() ?? "";
+    }
+  };
+
+  window.confirmarRetornoCril = async function(){
+    const km = Number(document.getElementById("input-km-cril").value);
+    if(!km){ toast("Informe a KM ao chegar na CRIL.", "erro"); return; }
+    const ultimaKm = ultimaKmConhecida();
+    if(ultimaKm != null && km < ultimaKm){
+      toast("KM não pode ser menor que a última registrada (" + ultimaKm.toLocaleString("pt-BR") + ").", "erro");
+      return;
+    }
+    try{
+      await updateDoc(doc(db, "registros", viagemAberta.id), {
+        paradas: arrayUnion({ local: "CRIL", km, hora: new Date() })
+      });
+      await finalizarComKm(km);
+    }catch(e){
+      console.error(e);
+      toast("Erro ao confirmar chegada na CRIL.", "erro");
+    }
+  };
+
+  window.finalizarSemRetorno = function(){
     const paradas = viagemAberta.paradas || [];
     if(!paradas.length){
       toast("Registre ao menos uma parada antes de finalizar.", "erro");
       return;
     }
-    const kmFinal = paradas[paradas.length - 1].km;
+    if(!confirm("Tem certeza que deseja finalizar sem retornar à CRIL?")) return;
+    finalizarComKm(paradas[paradas.length - 1].km);
+  };
+
+  window.finalizarViagem = function(){
+    const paradas = viagemAberta.paradas || [];
+    if(!paradas.length){
+      toast("Registre ao menos uma parada antes de finalizar.", "erro");
+      return;
+    }
+    finalizarComKm(paradas[paradas.length - 1].km);
+  };
+
+  async function finalizarComKm(kmFinal){
     try{
       await updateDoc(doc(db, "registros", viagemAberta.id), {
         status: "fechado",
@@ -858,7 +952,7 @@
       console.error(e);
       toast("Erro ao finalizar viagem.", "erro");
     }
-  };
+  }
 
   window.alternarFormAbastecimento = function(){
     const form = document.getElementById("form-abastecimento");
@@ -1056,9 +1150,10 @@
     return d.toISOString().slice(0,16);
   }
 
-  function resumoParadas(paradas){
+  function resumoParadas(paradas, nomeUsuario){
     if(!paradas || !paradas.length) return "—";
-    return paradas.map((p,i)=> (i+1) + ". " + p.local + " (" + p.km.toLocaleString("pt-BR") + " km)").join(" · ");
+    const sufixoUsuario = nomeUsuario ? " (" + nomeUsuario + ")" : "";
+    return paradas.map((p,i)=> (i+1) + ". " + p.local + sufixoUsuario + " — " + p.km.toLocaleString("pt-BR") + " km").join(" · ");
   }
 
   function renderizarTabela(){
@@ -1081,7 +1176,7 @@
         "<td><input class=\"editavel mono\" data-id=\"" + r.id + "\" data-campo=\"kmInicial\" value=\"" + (r.kmInicial ?? "") + "\"></td>" +
         "<td><input class=\"editavel mono\" data-id=\"" + r.id + "\" data-campo=\"kmFinal\" value=\"" + (r.kmFinal ?? "") + "\"></td>" +
         "<td class=\"mono\">" + (r.kmRodado != null ? r.kmRodado.toLocaleString("pt-BR") : "—") + "</td>" +
-        "<td class=\"paradas-resumo\">" + resumoParadas(r.paradas) +
+        "<td class=\"paradas-resumo\">" + resumoParadas(r.paradas, r.nomeUsuario) +
           "<br><button class=\"btn-link\" onclick=\"window.alternarEdicaoParadas('" + r.id + "')\">" +
           (expandido ? "Fechar edição" : "Editar paradas") + "</button></td>";
       tbody.appendChild(tr);
@@ -1123,18 +1218,20 @@
 
   function montarEditorParadas(id){
     const paradas = paradasEmEdicao[id] || [];
-    let html = '<div class="paradas-editor" data-paradas-edicao="' + id + '">';
+    const registro = registrosDoPeriodo.find(r=>r.id===id);
+    let html = '<div class="paradas-editor" data-paradas-edicao="' + id + '">'
+      + '<div class="parada-edit-linha usuario-edit-linha">'
+      + '<label style="font-size:11.5px; font-weight:700; color:var(--texto-2); min-width:110px;">Nome do usuário</label>'
+      + '<input class="pe-usuario upper" placeholder="Nome do usuário" value="' + ((registro?.nomeUsuario)||"").replace(/"/g,'&quot;') + '" style="flex:2; min-width:140px;">'
+      + '</div>';
     if(!paradas.length){
       html += '<div class="parada-vazia">Nenhuma parada. Clique em "Adicionar parada".</div>';
     }
     paradas.forEach((p, i)=>{
-      const fotoId = "foto-pe-km-" + id + "-" + i;
       html += '<div class="parada-edit-linha">'
         + '<input class="pe-local" placeholder="Local" value="' + (p.local||"").replace(/"/g,'&quot;') + '">'
         + '<input class="pe-km mono" type="number" placeholder="KM" value="' + (p.km ?? "") + '">'
         + '<input class="pe-hora" type="datetime-local" value="' + paraDatetimeLocal(p.hora) + '">'
-        + '<label class="pe-ocr" for="' + fotoId + '">📷</label>'
-        + '<input type="file" id="' + fotoId + '" accept="image/*" capture="environment" style="display:none" data-pe-km-alvo="' + i + '" data-pe-registro="' + id + '">'
         + '<button class="btn-link perigo" onclick="window.removerParadaEdicao(\'' + id + '\',' + i + ')">Remover</button>'
         + '</div>';
     });
@@ -1177,7 +1274,7 @@
   function sincronizarEdicaoDoDom(id){
     const container = document.querySelector('[data-paradas-edicao="' + id + '"]');
     if(!container) return;
-    const linhas = container.querySelectorAll(".parada-edit-linha");
+    const linhas = container.querySelectorAll(".parada-edit-linha:not(.usuario-edit-linha)");
     const atualizadas = [];
     linhas.forEach(linha=>{
       atualizadas.push({
@@ -1196,9 +1293,13 @@
       .map(p=>({ local: p.local.trim().toUpperCase(), km: p.km, hora: p.hora }))
       .sort((a,b)=> a.hora - b.hora);
 
+    const container = document.querySelector('[data-paradas-edicao="' + id + '"]');
+    const nomeUsuario = container ? container.querySelector(".pe-usuario").value.trim().toUpperCase() : "";
+
     const registro = registrosDoPeriodo.find(r=>r.id===id);
     const dados = {
       paradas: novasParadas,
+      nomeUsuario,
       editadoPor: auth.currentUser.email,
       editadoEm: serverTimestamp()
     };
@@ -1273,7 +1374,7 @@
           horaFinal: horaParada,
           kmInicial: kmAnterior,
           kmFinal: p.km,
-          itinerario: p.local
+          itinerario: p.local + (r.nomeUsuario ? " (" + r.nomeUsuario + ")" : "")
         });
         horaAnterior = horaParada;
         kmAnterior = p.km;
