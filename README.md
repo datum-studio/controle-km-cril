@@ -17,6 +17,9 @@ PWA para controle de quilometragem e abastecimento do veículo da Central de Reg
 - **Se o motorista esquecer de registrar algo**: (1) o motorista pode escolher manualmente o horário de cada parada, não fica preso ao "agora"; (2) o admin pode adicionar, corrigir ou remover paradas de qualquer viagem já registrada, na aba Registros; (3) o painel do admin mostra um aviso quando existe uma viagem em aberto há mais de 12h, sinal de que o motorista pode ter esquecido de finalizar
 - **KM do cartão de abastecimento**: existe um deslocamento fixo (resto de KM de um carro anterior) que se soma à KM real do carro para dar o número que o motorista informa ao posto — mas só quando o **cartão Coringa** é usado. No abastecimento, o motorista escolhe entre cartão **Normal** (informa a KM real do carro, sem soma nenhuma) ou **Coringa** (informa a KM real + deslocamento). O admin configura esse deslocamento na aba Combustível; o motorista só vê o resultado já somado, em destaque, e apenas quando o Coringa está selecionado
 - **Relatório de abastecimentos em PDF**: na aba Combustível, o admin pode gerar um relatório (via impressão do navegador, "salvar como PDF") com data, KM, litros, valor/litro, total, autonomia e qual cartão foi usado em cada abastecimento do período — sem vincular à viagem. Termina com um resumo de totais e um campo de assinatura da Gestão
+- **Checklist semanal do carro**: toda semana (a partir de segunda-feira), o motorista faz uma vistoria completa — óleo, líquido de arrefecimento, elétrica/iluminação (faróis, luzes de freio/ré, setas, buzina), pneus/estepe/freios, cinto/para-brisa/palhetas, bateria/mecânica, e lataria (riscos/amassados por parte: para-choques, capô, portas, teto). Cada item é marcado OK ou Defeito; ao marcar Defeito, precisa descrever o problema — a data fica automática. A tela inicial do motorista mostra um aviso se o checklist da semana ainda não foi feito. Defeitos de lataria são reconfirmados toda semana (não persistem sozinhos — se o motorista marcar OK, o item sai da lista de defeitos ativos)
+- **Controle de troca de óleo**: separado do checklist. Motorista registra quando trocou o óleo (KM); o admin configura os intervalos (por KM rodado e por meses — vale o que vencer primeiro). O sistema avisa tanto o motorista (tela inicial) quanto o admin (aba Manutenção) quando a troca está vencida
+- **Aba Manutenção (admin)**: mostra o status da troca de óleo (última troca, próxima prevista, se está vencida), os defeitos sinalizados no último checklist, e o histórico completo de checklists enviados (data, semana, quantidade de defeitos, quem enviou) — assim a gestão sempre consegue ver se o motorista sinalizou algum problema
 - Estrutura de PWA (manifest + service worker) pronta para "instalar" no celular/tablet do motorista, com ícones reais da CRIL em `icons/icon-192.png` e `icons/icon-512.png` (arquivos de verdade, não mais em base64 — mais confiável para o Android reconhecer como instalável)
 - Em visita hospitalar, a lista de nomes de usuário é restrita a Eliete Castro, Katia Kalene e Maria Grasiela; em viagem, continua com a lista completa, e permite **selecionar mais de um usuário** (Ctrl/Cmd+clique para selecionar vários), já que uma viagem longa pode levar mais de uma pessoa
 
@@ -100,6 +103,10 @@ veiculos/polo-track
   kmAtual: number
   kmUltimoAbastecimento: number
   deslocamentoCartao: number (deslocamento fixo somado à KM real no abastecimento, só o admin edita)
+  kmUltimaTrocaOleo: number
+  dataUltimaTrocaOleo: timestamp
+  intervaloKmOleo: number (padrão 10000, só o admin edita)
+  intervaloMesesOleo: number (padrão 6, só o admin edita)
 
 registros/{id}
   status: "aberto" | "fechado"
@@ -130,6 +137,12 @@ abastecimentos/{id}
 
 usuarios/{uid}
   perfil: "motorista" | "admin"
+
+checklists/{id}
+  semanaInicio: string ("YYYY-MM-DD" da segunda-feira daquela semana, usado para saber se já foi feito)
+  data: timestamp (momento do envio)
+  registradoPor: string (e-mail)
+  itens: array de { categoria: string, item: string, status: "ok" | "defeito", descricao: string }
 ```
 
 Observações:

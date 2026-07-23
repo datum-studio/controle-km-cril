@@ -156,6 +156,31 @@
     background:var(--vermelho-bg); border:1.5px solid var(--vermelho); color:var(--vermelho);
     border-radius:8px; padding:14px 16px; margin-bottom:16px; font-size:13.5px; font-weight:600;
   }
+  .aviso-card.roxo{background:var(--roxo-bg); border-color:var(--roxo); color:var(--roxo);}
+  .aviso-card.verde{background:var(--verde-bg); border-color:var(--verde); color:var(--verde);}
+  .aviso-card .btn-link{color:inherit; text-decoration:underline; margin-left:6px;}
+
+  .checklist-categoria{margin-bottom:16px;}
+  .checklist-categoria h3{
+    font-size:12px; font-weight:800; color:var(--roxo); text-transform:uppercase;
+    letter-spacing:.02em; margin-bottom:8px;
+  }
+  .checklist-item{
+    border:1px solid var(--linha); border-radius:8px; padding:10px 12px; margin-bottom:8px;
+  }
+  .checklist-item-topo{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;}
+  .checklist-item-nome{font-size:13px; font-weight:600;}
+  .checklist-status-btns{display:flex; gap:6px;}
+  .status-btn{
+    padding:6px 12px; border-radius:6px; border:1.5px solid var(--linha); background:#fff;
+    font-size:12px; font-weight:700; color:var(--texto-2); cursor:pointer;
+  }
+  .status-btn.ok.selecionado{border-color:var(--verde); background:var(--verde-bg); color:var(--verde);}
+  .status-btn.defeito.selecionado{border-color:var(--vermelho); background:var(--vermelho-bg); color:var(--vermelho);}
+  .checklist-item-descricao{margin-top:8px; display:none;}
+  .checklist-item-descricao input{
+    width:100%; padding:8px 10px; border:1px solid var(--linha); border-radius:6px; font-size:12.5px;
+  }
 
   .divisor{border:none; border-top:1.5px dashed var(--linha); margin:20px 0;}
 
@@ -305,6 +330,8 @@
 
   <main>
     <div id="view-motorista" style="display:none;">
+      <div id="aviso-checklist-semana" style="display:none;"></div>
+      <div id="aviso-oleo-motorista" style="display:none;"></div>
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
           <h2 style="margin:0;">Registro de viagem</h2>
@@ -423,6 +450,25 @@
           <div class="autonomia-preview" id="autonomia-preview"></div>
           <button class="btn btn-ambar" style="width:100%;" onclick="window.registrarAbastecimento()">Salvar abastecimento</button>
         </div>
+
+        <hr class="divisor">
+
+        <button class="abastecimento-toggle" style="border-color:var(--roxo); background:var(--roxo-bg); color:var(--roxo);" onclick="window.alternarFormChecklist()">Fazer checklist semanal do carro</button>
+        <div id="form-checklist" style="display:none; margin-top:14px;">
+          <div id="checklist-categorias"></div>
+          <button class="btn btn-primario" style="width:100%; margin-top:6px;" onclick="window.enviarChecklist()">Enviar checklist</button>
+        </div>
+
+        <hr class="divisor">
+
+        <button class="abastecimento-toggle" style="border-color:var(--azul-600); background:var(--azul-100); color:var(--azul-600);" onclick="window.alternarFormTrocaOleo()">Registrar troca de óleo</button>
+        <div id="form-troca-oleo" style="display:none; margin-top:14px;">
+          <div class="field">
+            <label>KM da troca</label>
+            <input type="number" id="input-km-troca-oleo" inputmode="numeric">
+          </div>
+          <button class="btn btn-secundario" style="width:100%;" onclick="window.registrarTrocaOleo()">Salvar troca de óleo</button>
+        </div>
       </div>
     </div>
 
@@ -432,6 +478,7 @@
         <div class="tab ativa" id="tab-dashboard" onclick="window.mudarAba('dashboard')">Dashboard</div>
         <div class="tab" id="tab-registros" onclick="window.mudarAba('registros')">Registros</div>
         <div class="tab" id="tab-combustivel" onclick="window.mudarAba('combustivel')">Combustível</div>
+        <div class="tab" id="tab-manutencao" onclick="window.mudarAba('manutencao')">Manutenção</div>
       </div>
 
       <div class="card">
@@ -516,6 +563,46 @@
           </div>
         </div>
       </div>
+
+      <div id="aba-manutencao" style="display:none;">
+        <div class="card">
+          <h2>Troca de óleo</h2>
+          <div class="card-sub">Intervalos configuráveis — vale o que vencer primeiro. Só o admin altera.</div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Intervalo por KM</label>
+              <input type="number" id="input-intervalo-km-oleo" placeholder="Ex.: 10000">
+            </div>
+            <div class="field">
+              <label>Intervalo por meses</label>
+              <input type="number" id="input-intervalo-meses-oleo" placeholder="Ex.: 6">
+            </div>
+          </div>
+          <button class="btn btn-secundario" onclick="window.salvarConfigOleo()">Salvar intervalos</button>
+          <div id="status-troca-oleo" style="margin-top:14px;"></div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0;">Defeitos do último checklist</h2>
+            <span class="card-sub" style="margin:0;">Enviado em: <b id="checklist-ultima-data">—</b></span>
+          </div>
+          <div id="checklist-defeitos-body" style="margin-top:12px;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Histórico de checklists</h2>
+          <div style="overflow-x:auto;">
+            <table class="registros">
+              <thead>
+                <tr><th>Enviado em</th><th>Semana</th><th>Defeitos</th><th>Motorista</th></tr>
+              </thead>
+              <tbody id="tabela-checklist-body"></tbody>
+            </table>
+            <div class="vazio" id="checklist-historico-vazio" style="display:none;">Nenhum checklist enviado ainda.</div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -533,7 +620,7 @@
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {
     getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc,
-    query, where, orderBy, onSnapshot, serverTimestamp, Timestamp, arrayUnion
+    query, where, orderBy, onSnapshot, serverTimestamp, Timestamp, arrayUnion, limit
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -592,6 +679,19 @@
     "REMANSO - BA",
     "SALGUEIRO - PE",
     "SENHOR DO BONFIM - BA"
+  ];
+
+  const CHECKLIST_CATEGORIAS = [
+    { nome: "Fluidos e níveis", itens: ["Óleo do motor", "Líquido de arrefecimento"] },
+    { nome: "Elétrica e iluminação", itens: ["Farol baixo", "Farol alto", "Luz de freio", "Luz de ré", "Setas", "Luzes do painel/outras", "Buzina"] },
+    { nome: "Pneus e freios", itens: ["Pneus", "Estepe", "Freios"] },
+    { nome: "Segurança e conforto", itens: ["Cinto de segurança", "Para-brisa", "Palhetas do limpador"] },
+    { nome: "Bateria e mecânica", itens: ["Bateria", "Parte mecânica"] },
+    { nome: "Lataria (riscos e amassados)", itens: [
+      "Para-choque dianteiro", "Para-choque traseiro", "Capô",
+      "Porta dianteira direita", "Porta dianteira esquerda",
+      "Porta traseira direita", "Porta traseira esquerda", "Teto/lateral"
+    ] }
   ];
 
   function popularSelect(selectEl, opcoes){
@@ -742,6 +842,7 @@
       inicializarFiltrosData();
       window.carregarDados();
       monitorarViagemAbertaHaMuitoTempo();
+      monitorarManutencao();
     }
   });
 
@@ -770,20 +871,122 @@
     });
   }
 
+  function monitorarManutencao(){
+    onSnapshot(doc(db, "veiculos", VEICULO_ID), (snap)=>{
+      if(!snap.exists()) return;
+      const d = snap.data();
+      const campoKm = document.getElementById("input-intervalo-km-oleo");
+      const campoMeses = document.getElementById("input-intervalo-meses-oleo");
+      if(campoKm && document.activeElement !== campoKm){
+        campoKm.value = d.intervaloKmOleo ?? 10000;
+      }
+      if(campoMeses && document.activeElement !== campoMeses){
+        campoMeses.value = d.intervaloMesesOleo ?? 6;
+      }
+      renderizarStatusOleoAdmin(d);
+    });
+
+    const qUltimo = query(collection(db, "checklists"), orderBy("data", "desc"), limit(1));
+    onSnapshot(qUltimo, (snap)=>{
+      const dataEl = document.getElementById("checklist-ultima-data");
+      const corpo = document.getElementById("checklist-defeitos-body");
+      if(!dataEl || !corpo) return;
+      if(snap.empty){
+        dataEl.textContent = "—";
+        corpo.innerHTML = '<div class="vazio">Nenhum checklist enviado ainda.</div>';
+        return;
+      }
+      const c = snap.docs[0].data();
+      const data = c.data?.toDate ? c.data.toDate() : null;
+      dataEl.textContent = data ? data.toLocaleString("pt-BR") : "—";
+      const defeitos = (c.itens || []).filter(i=>i.status === "defeito");
+      if(!defeitos.length){
+        corpo.innerHTML = '<div class="aviso-card verde">✅ Nenhum defeito sinalizado no último checklist.</div>';
+      } else {
+        corpo.innerHTML = defeitos.map(def=>
+          '<div class="parada-item"><div><div class="parada-local">' + def.item + '</div>'
+          + '<div class="parada-meta">' + def.categoria + (def.descricao ? " — " + def.descricao : "") + '</div></div></div>'
+        ).join("");
+      }
+    });
+
+    const qHistorico = query(collection(db, "checklists"), orderBy("data", "desc"));
+    onSnapshot(qHistorico, (snap)=>{
+      const tbody = document.getElementById("tabela-checklist-body");
+      const vazio = document.getElementById("checklist-historico-vazio");
+      if(!tbody) return;
+      tbody.innerHTML = "";
+      vazio.style.display = snap.empty ? "block" : "none";
+      snap.docs.forEach(docSnap=>{
+        const c = docSnap.data();
+        const data = c.data?.toDate ? c.data.toDate() : null;
+        const totalDefeitos = (c.itens || []).filter(i=>i.status === "defeito").length;
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + (data ? data.toLocaleString("pt-BR") : "—") + "</td>" +
+          "<td>" + (c.semanaInicio || "—") + "</td>" +
+          "<td class=\"mono\">" + totalDefeitos + "</td>" +
+          "<td>" + (c.registradoPor || "—") + "</td>";
+        tbody.appendChild(tr);
+      });
+    });
+  }
+
+  function renderizarStatusOleoAdmin(d){
+    const el = document.getElementById("status-troca-oleo");
+    if(!el) return;
+    const status = calcularStatusOleo(d);
+    if(!status){
+      el.innerHTML = '<div class="aviso-card roxo">Nenhuma troca de óleo registrada ainda.</div>';
+      return;
+    }
+    el.innerHTML = '<div class="aviso-card' + (status.vencido ? '' : ' verde') + '">'
+      + (status.vencido ? '⚠️ Troca de óleo vencida! ' : '✅ Óleo em dia. ')
+      + 'Última troca: ' + status.kmUltima.toLocaleString("pt-BR") + ' km em ' + status.dataUltima.toLocaleDateString("pt-BR")
+      + '. Próxima prevista: ' + status.kmProxima.toLocaleString("pt-BR") + ' km ou ' + status.dataProxima.toLocaleDateString("pt-BR")
+      + '.</div>';
+  }
+
+  window.salvarConfigOleo = async function(){
+    const km = Number(document.getElementById("input-intervalo-km-oleo").value);
+    const meses = Number(document.getElementById("input-intervalo-meses-oleo").value);
+    if(!km || !meses){ toast("Informe os dois intervalos.", "erro"); return; }
+    try{
+      await setDoc(doc(db, "veiculos", VEICULO_ID), { intervaloKmOleo: km, intervaloMesesOleo: meses }, { merge: true });
+      toast("Intervalos de óleo salvos.", "sucesso");
+    }catch(e){
+      console.error(e);
+      toast("Erro ao salvar intervalos.", "erro");
+    }
+  };
+
   async function iniciarListenersMotorista(){
     onSnapshot(doc(db, "veiculos", VEICULO_ID), (snap)=>{
       if(snap.exists()){
-        kmAtualVeiculo = snap.data().kmAtual;
-        kmUltimoAbastecimento = snap.data().kmUltimoAbastecimento ?? null;
-        deslocamentoCartao = snap.data().deslocamentoCartao ?? 0;
+        const d = snap.data();
+        kmAtualVeiculo = d.kmAtual;
+        kmUltimoAbastecimento = d.kmUltimoAbastecimento ?? null;
+        deslocamentoCartao = d.deslocamentoCartao ?? 0;
         document.getElementById("km-atual-valor").textContent = kmAtualVeiculo?.toLocaleString("pt-BR") ?? "—";
         document.getElementById("km-ultimo-abastecimento-valor").textContent = kmUltimoAbastecimento?.toLocaleString("pt-BR") ?? "—";
         document.getElementById("fv-km-inicial").textContent = kmAtualVeiculo?.toLocaleString("pt-BR") ?? "—";
         document.getElementById("input-km-abastecimento").value = kmAtualVeiculo ?? "";
         document.getElementById("input-parada-km").value = ultimaKmConhecida() ?? "";
         atualizarPreviaAutonomia();
+
+        const avisoOleo = document.getElementById("aviso-oleo-motorista");
+        const statusOleo = calcularStatusOleo(d);
+        if(statusOleo && statusOleo.vencido){
+          avisoOleo.innerHTML = '<div class="aviso-card">🛢️ Troca de óleo vencida! Última troca: '
+            + statusOleo.kmUltima.toLocaleString("pt-BR") + ' km em ' + statusOleo.dataUltima.toLocaleDateString("pt-BR") + '.</div>';
+          avisoOleo.style.display = "block";
+        } else {
+          avisoOleo.style.display = "none";
+        }
       }
     });
+
+    verificarChecklistDaSemana();
 
     const q = query(collection(db, "registros"), where("status", "==", "aberto"));
     onSnapshot(q, (snap)=>{
@@ -860,6 +1063,141 @@
     const agora = new Date();
     agora.setMinutes(agora.getMinutes() - agora.getTimezoneOffset());
     return agora.toISOString().slice(0,16);
+  }
+
+  // ---------- Checklist semanal ----------
+  function segundaAtualStr(){
+    const hoje = new Date();
+    const dia = hoje.getDay();
+    const diff = (dia === 0 ? -6 : 1) - dia;
+    const segunda = new Date(hoje);
+    segunda.setDate(hoje.getDate() + diff);
+    segunda.setHours(0,0,0,0);
+    return segunda.toISOString().slice(0,10);
+  }
+
+  function montarFormChecklist(){
+    const container = document.getElementById("checklist-categorias");
+    let html = "";
+    CHECKLIST_CATEGORIAS.forEach(cat=>{
+      html += '<div class="checklist-categoria"><h3>' + cat.nome + '</h3>';
+      cat.itens.forEach(item=>{
+        html += '<div class="checklist-item" data-item="' + item + '" data-categoria="' + cat.nome + '">'
+          + '<div class="checklist-item-topo">'
+          + '<span class="checklist-item-nome">' + item + '</span>'
+          + '<div class="checklist-status-btns">'
+          + '<button type="button" class="status-btn ok selecionado" onclick="window.marcarStatusChecklist(this,\'ok\')">OK</button>'
+          + '<button type="button" class="status-btn defeito" onclick="window.marcarStatusChecklist(this,\'defeito\')">Defeito</button>'
+          + '</div></div>'
+          + '<div class="checklist-item-descricao"><input type="text" class="upper" placeholder="O QUE ESTÁ COM DEFEITO?"></div>'
+          + '</div>';
+      });
+      html += '</div>';
+    });
+    container.innerHTML = html;
+    container.querySelectorAll("input.upper").forEach(ligarUpper);
+  }
+
+  window.marcarStatusChecklist = function(btn, status){
+    const item = btn.closest(".checklist-item");
+    item.querySelectorAll(".status-btn").forEach(b=>b.classList.remove("selecionado"));
+    btn.classList.add("selecionado");
+    item.querySelector(".checklist-item-descricao").style.display = status === "defeito" ? "block" : "none";
+  };
+
+  window.alternarFormChecklist = function(){
+    const form = document.getElementById("form-checklist");
+    const abrir = form.style.display !== "block";
+    form.style.display = abrir ? "block" : "none";
+    if(abrir && !form.dataset.montado){
+      montarFormChecklist();
+      form.dataset.montado = "1";
+    }
+  };
+
+  window.enviarChecklist = async function(){
+    const itens = [];
+    let faltaDescricao = false;
+    document.querySelectorAll("#checklist-categorias .checklist-item").forEach(el=>{
+      const categoria = el.dataset.categoria;
+      const item = el.dataset.item;
+      const selecionado = el.querySelector(".status-btn.selecionado");
+      const status = selecionado && selecionado.classList.contains("defeito") ? "defeito" : "ok";
+      const descricao = el.querySelector(".checklist-item-descricao input").value.trim().toUpperCase();
+      if(status === "defeito" && !descricao) faltaDescricao = true;
+      itens.push({ categoria, item, status, descricao });
+    });
+    if(faltaDescricao){ toast("Descreva o defeito de todos os itens marcados como Defeito.", "erro"); return; }
+
+    try{
+      await addDoc(collection(db, "checklists"), {
+        semanaInicio: segundaAtualStr(),
+        data: serverTimestamp(),
+        registradoPor: auth.currentUser.email,
+        itens
+      });
+      document.getElementById("form-checklist").style.display = "none";
+      toast("Checklist enviado.", "sucesso");
+    }catch(e){
+      console.error(e);
+      toast("Erro ao enviar checklist.", "erro");
+    }
+  };
+
+  function verificarChecklistDaSemana(){
+    const semana = segundaAtualStr();
+    const q = query(collection(db, "checklists"), where("semanaInicio", "==", semana));
+    onSnapshot(q, (snap)=>{
+      const aviso = document.getElementById("aviso-checklist-semana");
+      if(!aviso) return;
+      if(snap.empty){
+        aviso.innerHTML = '<div class="aviso-card roxo">📋 Ainda não foi feito o checklist semanal do carro desta semana.'
+          + ' <button class="btn-link" onclick="window.alternarFormChecklist()">Fazer agora</button></div>';
+        aviso.style.display = "block";
+      } else {
+        aviso.style.display = "none";
+      }
+    });
+  }
+
+  // ---------- Troca de óleo ----------
+  window.alternarFormTrocaOleo = function(){
+    const form = document.getElementById("form-troca-oleo");
+    const abrir = form.style.display !== "block";
+    form.style.display = abrir ? "block" : "none";
+    if(abrir){
+      document.getElementById("input-km-troca-oleo").value = kmAtualVeiculo ?? "";
+    }
+  };
+
+  window.registrarTrocaOleo = async function(){
+    const km = Number(document.getElementById("input-km-troca-oleo").value);
+    if(!km){ toast("Informe a KM da troca.", "erro"); return; }
+    try{
+      await setDoc(doc(db, "veiculos", VEICULO_ID), {
+        kmUltimaTrocaOleo: km,
+        dataUltimaTrocaOleo: serverTimestamp()
+      }, { merge: true });
+      document.getElementById("form-troca-oleo").style.display = "none";
+      toast("Troca de óleo registrada.", "sucesso");
+    }catch(e){
+      console.error(e);
+      toast("Erro ao registrar troca de óleo.", "erro");
+    }
+  };
+
+  function calcularStatusOleo(d){
+    const kmUltima = d.kmUltimaTrocaOleo;
+    const dataUltima = d.dataUltimaTrocaOleo?.toDate ? d.dataUltimaTrocaOleo.toDate() : null;
+    if(kmUltima == null || !dataUltima) return null;
+    const intervaloKm = d.intervaloKmOleo ?? 10000;
+    const intervaloMeses = d.intervaloMesesOleo ?? 6;
+    const kmProxima = kmUltima + intervaloKm;
+    const dataProxima = new Date(dataUltima);
+    dataProxima.setMonth(dataProxima.getMonth() + intervaloMeses);
+    const kmAtual = d.kmAtual || 0;
+    const vencido = (kmAtual >= kmProxima) || (new Date() >= dataProxima);
+    return { kmUltima, dataUltima, kmProxima, dataProxima, vencido };
   }
 
   window.selecionarTipo = function(tipo){
@@ -1140,7 +1478,7 @@
   };
 
   window.mudarAba = function(aba){
-    ["dashboard","registros","combustivel"].forEach(a=>{
+    ["dashboard","registros","combustivel","manutencao"].forEach(a=>{
       document.getElementById("tab-"+a).classList.toggle("ativa", a===aba);
       document.getElementById("aba-"+a).style.display = a===aba ? "block" : "none";
     });
