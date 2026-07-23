@@ -321,6 +321,16 @@
               <button class="tipo-btn" data-tipo="outro" onclick="window.selecionarTipo('outro')">Outro</button>
             </div>
           </div>
+          <div id="grupo-destino-viagem" style="display:none;">
+            <div class="field">
+              <label>Destino (município)</label>
+              <select id="select-destino-viagem" onchange="window.alternarDestinoOutro()"></select>
+            </div>
+            <div class="field" id="campo-destino-texto" style="display:none;">
+              <label>Digite o município</label>
+              <input type="text" id="input-destino-viagem" class="upper" placeholder="MUNICÍPIO DE DESTINO">
+            </div>
+          </div>
           <div id="grupo-nome-usuario" style="display:none;">
             <div class="field">
               <label id="label-nome-usuario">Nome do usuário do veículo</label>
@@ -560,6 +570,16 @@
     "MARIA GRASIELA"
   ];
 
+  const MUNICIPIOS = [
+    "ARARIPINA - PE",
+    "CAMPO FORMOSO - BA",
+    "OURICURI - PE",
+    "PAULO AFONSO - BA",
+    "REMANSO - BA",
+    "SALGUEIRO - PE",
+    "SENHOR DO BONFIM - BA"
+  ];
+
   function popularSelect(selectEl, opcoes){
     selectEl.innerHTML = "";
     const optVazia = document.createElement("option");
@@ -576,6 +596,7 @@
   }
   popularSelect(document.getElementById("select-nome-usuario"), USUARIOS);
   popularSelect(document.getElementById("select-parada-hospital"), HOSPITAIS);
+  popularSelect(document.getElementById("select-destino-viagem"), MUNICIPIOS);
 
   window.alternarUsuarioOutro = function(){
     const sel = document.getElementById("select-nome-usuario");
@@ -587,6 +608,17 @@
     const sel = document.getElementById("select-parada-hospital");
     document.getElementById("campo-local-texto").style.display = sel.value === "OUTRO" ? "block" : "none";
   };
+
+  window.alternarDestinoOutro = function(){
+    const sel = document.getElementById("select-destino-viagem");
+    document.getElementById("campo-destino-texto").style.display = sel.value === "OUTRO" ? "block" : "none";
+  };
+
+  function obterDestinoViagem(){
+    const sel = document.getElementById("select-destino-viagem");
+    if(sel.value && sel.value !== "OUTRO") return sel.value;
+    return document.getElementById("input-destino-viagem").value.trim().toUpperCase();
+  }
 
   function obterNomeUsuarioSelecionado(){
     const sel = document.getElementById("select-nome-usuario");
@@ -822,6 +854,12 @@
       b.classList.toggle("selecionado", b.dataset.tipo === tipo);
     });
     document.getElementById("grupo-nome-usuario").style.display = tipo === "outro" ? "none" : "block";
+    document.getElementById("grupo-destino-viagem").style.display = tipo === "viagem" ? "block" : "none";
+    if(tipo !== "viagem"){
+      document.getElementById("select-destino-viagem").value = "";
+      document.getElementById("input-destino-viagem").value = "";
+      document.getElementById("campo-destino-texto").style.display = "none";
+    }
     const sel = document.getElementById("select-nome-usuario");
     if(tipo === "visita_hospitalar"){
       sel.multiple = false;
@@ -846,6 +884,8 @@
     if(!tipoSelecionado){ toast("Escolha o tipo de deslocamento.", "erro"); return; }
     const nomeUsuario = tipoSelecionado === "outro" ? "" : obterNomeUsuarioSelecionado();
     if(tipoSelecionado !== "outro" && !nomeUsuario){ toast("Informe o nome do usuário do veículo.", "erro"); return; }
+    const destino = tipoSelecionado === "viagem" ? obterDestinoViagem() : "";
+    if(tipoSelecionado === "viagem" && !destino){ toast("Informe o destino (município) da viagem.", "erro"); return; }
     if(kmAtualVeiculo == null){ toast("KM do veículo ainda não carregada, aguarde.", "erro"); return; }
 
     try{
@@ -853,6 +893,7 @@
         status: "aberto",
         tipo: tipoSelecionado,
         nomeUsuario,
+        destino,
         paradas: [],
         kmInicial: kmAtualVeiculo,
         kmFinal: null,
@@ -872,6 +913,10 @@
       document.getElementById("input-nome-usuario").value = "";
       document.getElementById("campo-usuario-texto").style.display = "none";
       document.getElementById("grupo-nome-usuario").style.display = "block";
+      document.getElementById("select-destino-viagem").value = "";
+      document.getElementById("input-destino-viagem").value = "";
+      document.getElementById("campo-destino-texto").style.display = "none";
+      document.getElementById("grupo-destino-viagem").style.display = "none";
       toast("Viagem iniciada.", "sucesso");
     }catch(e){
       console.error(e);
@@ -1392,13 +1437,21 @@
       const rotulo = rotulosTipo[r.tipo] || r.tipo;
       (r.paradas || []).forEach(p=>{
         const horaParada = p.hora?.toDate ? p.hora.toDate() : (p.hora instanceof Date ? p.hora : null);
+        const sufixoUsuario = r.nomeUsuario ? " (" + r.nomeUsuario + ")" : "";
+        let itinerario;
+        if(p.local === "CRIL"){
+          itinerario = "RETORNO À CRIL" + sufixoUsuario;
+        } else {
+          const sufixoDestino = (r.tipo === "viagem" && r.destino) ? " - " + r.destino : "";
+          itinerario = rotulo + sufixoDestino + " - " + p.local + sufixoUsuario;
+        }
         linhas.push({
           data: horaParada || horaAnterior,
           horaInicial: horaAnterior,
           horaFinal: horaParada,
           kmInicial: kmAnterior,
           kmFinal: p.km,
-          itinerario: rotulo + " - " + p.local + (r.nomeUsuario ? " (" + r.nomeUsuario + ")" : "")
+          itinerario: itinerario
         });
         horaAnterior = horaParada;
         kmAnterior = p.km;
