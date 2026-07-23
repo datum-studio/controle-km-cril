@@ -576,6 +576,12 @@
     "MARIA GRASIELA"
   ];
 
+  const USUARIOS_VISITA_HOSPITALAR = [
+    "ELIETE CASTRO",
+    "KATIA KALENE",
+    "MARIA GRASIELA"
+  ];
+
   function popularSelect(selectEl, opcoes){
     selectEl.innerHTML = "";
     const optVazia = document.createElement("option");
@@ -829,6 +835,13 @@
       b.classList.toggle("selecionado", b.dataset.tipo === tipo);
     });
     document.getElementById("grupo-nome-usuario").style.display = tipo === "outro" ? "none" : "block";
+    if(tipo === "visita_hospitalar"){
+      popularSelect(document.getElementById("select-nome-usuario"), USUARIOS_VISITA_HOSPITALAR);
+    } else if(tipo === "viagem"){
+      popularSelect(document.getElementById("select-nome-usuario"), USUARIOS);
+    }
+    document.getElementById("input-nome-usuario").value = "";
+    document.getElementById("campo-usuario-texto").style.display = "none";
   };
 
   window.iniciarViagem = async function(){

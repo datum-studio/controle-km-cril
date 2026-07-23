@@ -1,7 +1,9 @@
-const CACHE_NAME = "km-cril-v1";
+const CACHE_NAME = "km-cril-v2";
 const ARQUIVOS_CACHE = [
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {

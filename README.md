@@ -8,6 +8,7 @@ PWA para controle de quilometragem e abastecimento do veículo da Central de Reg
 - Motorista inicia uma viagem informando o **nome do usuário do veículo** (lista pré-cadastrada + opção de digitar) e escolhendo o tipo (visita hospitalar, viagem ou outro) — data/hora e KM inicial automáticas
 - **Múltiplas paradas por viagem**: enquanto a viagem está aberta, o motorista registra cada parada (local + KM ao chegar), quantas forem necessárias. Em visitas hospitalares, o local é escolhido numa lista de hospitais de Juazeiro-BA e Petrolina-PE (sempre com opção de digitar outro local manualmente)
 - **Retorno à CRIL obrigatório em visita hospitalar e outro**: pra finalizar, o motorista precisa confirmar a chegada na CRIL informando a KM, ou explicitamente confirmar que está finalizando sem retornar (com um alerta de confirmação). Viagens (fora da cidade) ficam de fora dessa regra, já que podem terminar em outro lugar (hotel, por exemplo)
+- **KM não pode ficar igual**: cada parada (incluindo a chegada na CRIL) exige uma KM maior que a última registrada — se o motorista esquecer de olhar o painel e digitar o mesmo número de antes, o app bloqueia e avisa
 - Trava de uma viagem aberta por vez
 - **Abastecimento avulso**: pode ser registrado a qualquer momento, mesmo com uma viagem em aberto (fica vinculado a ela se houver). Registra litros e valor por litro, calcula o valor total gasto e a autonomia (km/l) desde o último abastecimento
 - Motorista vê a KM atual do veículo e a KM do último abastecimento na tela
@@ -15,7 +16,8 @@ PWA para controle de quilometragem e abastecimento do veículo da Central de Reg
 - Geração de página de impressão em **paisagem**, com numeração de página no rodapé, no layout da planilha original (cada parada vira sua própria linha, com data/hora/KM daquele trecho específico, e o nome do usuário aparece entre parênteses ao lado do local — ex.: "HOSPITAL REGIONAL DE JUAZEIRO (KATIA)"; sem litros/valor de combustível, que fica só no painel admin), para colher assinatura física
 - **Se o motorista esquecer de registrar algo**: (1) o motorista pode escolher manualmente o horário de cada parada, não fica preso ao "agora"; (2) o admin pode adicionar, corrigir ou remover paradas de qualquer viagem já registrada, na aba Registros; (3) o painel do admin mostra um aviso quando existe uma viagem em aberto há mais de 12h, sinal de que o motorista pode ter esquecido de finalizar
 - **KM do cartão de abastecimento**: existe um deslocamento fixo (resto de KM de um carro anterior) que se soma à KM real do carro para dar o número que o motorista informa ao posto. O admin configura esse deslocamento na aba Combustível; o motorista só vê o resultado já somado, em destaque, assim que digita a KM real do abastecimento
-- Estrutura de PWA (manifest + service worker) pronta para "instalar" no celular/tablet do motorista, com ícone próprio gerado a partir da logo da CRIL
+- Estrutura de PWA (manifest + service worker) pronta para "instalar" no celular/tablet do motorista, com ícones reais da CRIL em `icons/icon-192.png` e `icons/icon-512.png` (arquivos de verdade, não mais em base64 — mais confiável para o Android reconhecer como instalável)
+- Em visita hospitalar, a lista de nomes de usuário é restrita a Eliete Castro, Katia Kalene e Maria Grasiela; em viagem, continua com a lista completa
 
 **Fora do escopo desta v1** (combinado com a Débora): OCR de leitura da KM (testado e removido — não funcionou bem), GPS, assinatura digital no app — ficam para uma v2, ou não avançam mais.
 
@@ -82,7 +84,13 @@ service cloud.firestore {
 ```
 
 ### 7. Deploy no GitHub Pages
-Mesmo padrão dos outros projetos Datum Studio: subir esta pasta para um repositório e ativar o GitHub Pages apontando para a branch/pasta raiz.
+Mesmo padrão dos outros projetos Datum Studio: subir esta pasta para um repositório e ativar o GitHub Pages apontando para a branch/pasta raiz. **Importante**: a pasta `icons/` (com `icon-192.png` e `icon-512.png`) precisa subir junto — sem ela, o Android não reconhece o app como instalável.
+
+### 8. Se o PWA não aparecer como instalável no Android
+- Confirme que a pasta `icons/` foi enviada ao repositório (ela precisa estar publicada, não só existir localmente)
+- No Chrome do celular, abra o menu (⋮) → deve aparecer "Instalar aplicativo" ou "Adicionar à tela inicial" mesmo sem o banner automático aparecer sozinho
+- Se quiser conferir o que está travando, no computador abra a URL publicada no Chrome, aperte F12 → aba **Application** → **Manifest**: ali aparece qualquer erro de ícone ou configuração
+- Depois de qualquer atualização de arquivo, é bom fechar e reabrir a aba (ou limpar o cache do site) antes de tentar instalar de novo, já que o service worker guarda uma cópia antiga em cache
 
 ## Estrutura de dados (Firestore)
 
