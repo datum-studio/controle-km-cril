@@ -313,13 +313,15 @@
         </div>
 
         <div id="bloco-iniciar">
-          <div class="field">
-            <label>Nome do usuário do veículo</label>
-            <select id="select-nome-usuario" onchange="window.alternarUsuarioOutro()"></select>
-          </div>
-          <div class="field" id="campo-usuario-texto" style="display:none;">
-            <label>Digite o nome</label>
-            <input type="text" id="input-nome-usuario" class="upper" placeholder="NOME DE QUEM VAI USAR O CARRO">
+          <div id="grupo-nome-usuario">
+            <div class="field">
+              <label>Nome do usuário do veículo</label>
+              <select id="select-nome-usuario" onchange="window.alternarUsuarioOutro()"></select>
+            </div>
+            <div class="field" id="campo-usuario-texto" style="display:none;">
+              <label>Digite o nome</label>
+              <input type="text" id="input-nome-usuario" class="upper" placeholder="NOME DE QUEM VAI USAR O CARRO">
+            </div>
           </div>
           <div class="field">
             <label>Tipo de deslocamento</label>
@@ -550,28 +552,28 @@
 
   // Listas de sugestão — sempre com opção de digitar livremente. Editar aqui se precisar atualizar.
   const HOSPITAIS = [
-    "HOSPITAL REGIONAL DE JUAZEIRO - BA",
-    "HOSPITAL PROMATRE - JUAZEIRO - BA",
-    "IVDRBA - INSTITUTO VIVER DR ROBERTO BASTO DE ALENCAR",
-    "HOSPITAL MATERNO INFANTIL DE JUAZEIRO - BA",
-    "UNIDADE DE ATENDIMENTO PEDIÁTRICO - JUAZEIRO - BA",
-    "UPA DR JOÃO OLIVEIRA - JUAZEIRO - BA",
-    "HOSPITAL UNIVERSITÁRIO DE PETROLINA - PE",
     "HOSPITAL DOM MALAN - PETROLINA - PE",
     "HOSPITAL DOM TOMÁS - PETROLINA - PE",
+    "HOSPITAL MATERNO INFANTIL DE JUAZEIRO - BA",
+    "HOSPITAL PROMATRE - JUAZEIRO - BA",
+    "HOSPITAL REGIONAL DE JUAZEIRO - BA",
+    "HOSPITAL UNIVERSITÁRIO DE PETROLINA - PE",
     "INSTITUTO MEMORIAL DO VALE - PETROLINA - PE",
-    "UPA 24H DE PETROLINA - PE"
+    "IVDRBA - INSTITUTO VIVER DR ROBERTO BASTO DE ALENCAR",
+    "UNIDADE DE ATENDIMENTO PEDIÁTRICO - JUAZEIRO - BA",
+    "UPA 24H DE PETROLINA - PE",
+    "UPA DR JOÃO OLIVEIRA - JUAZEIRO - BA"
   ];
 
   const USUARIOS = [
-    "ELIETE CASTRO",
-    "KATIA KALENE",
-    "MARIA GRASIELA",
-    "ELIZANGELA GUIMARÃES",
+    "DÉBORA LOPES",
     "DR ANTONIO REIS",
     "DRA ANA CATARINA",
-    "DÉBORA LOPES",
-    "MARCELO CARVALHO"
+    "ELIETE CASTRO",
+    "ELIZANGELA GUIMARÃES",
+    "KATIA KALENE",
+    "MARCELO CARVALHO",
+    "MARIA GRASIELA"
   ];
 
   function popularSelect(selectEl, opcoes){
@@ -826,12 +828,13 @@
     document.querySelectorAll(".tipo-btn").forEach(b=>{
       b.classList.toggle("selecionado", b.dataset.tipo === tipo);
     });
+    document.getElementById("grupo-nome-usuario").style.display = tipo === "outro" ? "none" : "block";
   };
 
   window.iniciarViagem = async function(){
-    const nomeUsuario = obterNomeUsuarioSelecionado();
-    if(!nomeUsuario){ toast("Informe o nome do usuário do veículo.", "erro"); return; }
     if(!tipoSelecionado){ toast("Escolha o tipo de deslocamento.", "erro"); return; }
+    const nomeUsuario = tipoSelecionado === "outro" ? "" : obterNomeUsuarioSelecionado();
+    if(tipoSelecionado !== "outro" && !nomeUsuario){ toast("Informe o nome do usuário do veículo.", "erro"); return; }
     if(kmAtualVeiculo == null){ toast("KM do veículo ainda não carregada, aguarde.", "erro"); return; }
 
     try{
