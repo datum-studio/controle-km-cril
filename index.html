@@ -254,6 +254,10 @@
     table.print-tabela td.itinerario{text-align:left;}
     .print-logo{height:30px; margin:0 auto 6px;}
     .rodape-pagina{text-align:center; font-size:9px; color:#333; margin-top:6px;}
+    .resumo-combustivel{display:flex; justify-content:space-around; margin:14px 0; font-size:11px; text-align:center;}
+    .resumo-combustivel b{display:block; font-size:13px;}
+    .assinatura-gestao{margin-top:50px; display:flex; justify-content:center;}
+    .assinatura-gestao .linha-assinatura{width:320px; border-top:1px solid #333; padding-top:6px; text-align:center; font-size:10px;}
   }
 </style>
 </head>
@@ -395,6 +399,13 @@
         <button class="abastecimento-toggle" onclick="window.alternarFormAbastecimento()">Registrar abastecimento</button>
         <div id="form-abastecimento">
           <div class="field">
+            <label>Cartão utilizado</label>
+            <div class="tipo-opcoes" style="grid-template-columns:1fr 1fr;">
+              <button type="button" class="tipo-btn cartao-btn selecionado" data-cartao="NORMAL" onclick="window.selecionarCartao('NORMAL')">Normal</button>
+              <button type="button" class="tipo-btn cartao-btn" data-cartao="CORINGA" onclick="window.selecionarCartao('CORINGA')">Coringa</button>
+            </div>
+          </div>
+          <div class="field">
             <label>KM no momento do abastecimento</label>
             <input type="number" id="input-km-abastecimento" inputmode="numeric">
           </div>
@@ -488,12 +499,15 @@
             <div class="dash-stat destaque"><div class="n mono" id="dash-gasto-total">—</div><div class="l">Valor total gasto</div></div>
             <div class="dash-stat"><div class="n mono" id="dash-autonomia-media">—</div><div class="l">Autonomia média (km/l)</div></div>
           </div>
-          <h2>Abastecimentos do período</h2>
-          <div style="overflow-x:auto;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <h2 style="margin:0;">Abastecimentos do período</h2>
+            <button class="btn btn-primario" style="width:auto;" onclick="window.gerarImpressaoCombustivel()">Gerar PDF de abastecimentos</button>
+          </div>
+          <div style="overflow-x:auto; margin-top:12px;">
             <table class="registros">
               <thead>
                 <tr>
-                  <th>Data</th><th>KM</th><th>Litros</th><th>Valor/Litro</th><th>Total</th><th>Autonomia</th><th>Viagem vinculada</th>
+                  <th>Data</th><th>KM</th><th>Litros</th><th>Valor/Litro</th><th>Total</th><th>Autonomia</th><th>Cartão</th>
                 </tr>
               </thead>
               <tbody id="tabela-combustivel-body"></tbody>
@@ -817,7 +831,7 @@
     const selHospital = document.getElementById("select-parada-hospital");
     document.getElementById("campo-local-texto").style.display = (!modoHospital || selHospital.value === "OUTRO") ? "block" : "none";
 
-    const permiteRetornoCril = viagemAberta.tipo !== "viagem";
+    const permiteRetornoCril = true;
     document.getElementById("finalizar-com-cril").style.display = permiteRetornoCril ? "block" : "none";
     document.getElementById("btn-finalizar-viagem-simples").style.display = permiteRetornoCril ? "none" : "block";
 
@@ -1025,11 +1039,22 @@
     }
   }
 
+  let cartaoSelecionado = "NORMAL";
+
+  window.selecionarCartao = function(cartao){
+    cartaoSelecionado = cartao;
+    document.querySelectorAll(".cartao-btn").forEach(b=>{
+      b.classList.toggle("selecionado", b.dataset.cartao === cartao);
+    });
+    atualizarPreviaAutonomia();
+  };
+
   window.alternarFormAbastecimento = function(){
     const form = document.getElementById("form-abastecimento");
     form.style.display = form.style.display === "block" ? "none" : "block";
     if(form.style.display === "block" && kmAtualVeiculo != null){
       document.getElementById("input-km-abastecimento").value = ultimaKmConhecida() ?? kmAtualVeiculo;
+      window.selecionarCartao("NORMAL");
     }
   };
 
@@ -1058,9 +1083,9 @@
       preview.style.display = "none";
     }
 
-    if(km){
+    if(km && cartaoSelecionado === "CORINGA"){
       const kmCartao = km + (deslocamentoCartao || 0);
-      previewCartao.innerHTML = kmCartao.toLocaleString("pt-BR") + " km<span>Informe este número ao posto</span>";
+      previewCartao.innerHTML = kmCartao.toLocaleString("pt-BR") + " km<span>Informe este número ao posto (cartão coringa)</span>";
       previewCartao.style.display = "block";
     } else {
       previewCartao.style.display = "none";
@@ -1092,6 +1117,7 @@
         data: serverTimestamp(),
         km, litros, valorLitro, valorTotal,
         kmRodadoDesdeUltimo, autonomia,
+        cartao: cartaoSelecionado,
         viagemId: viagemAberta ? viagemAberta.id : null,
         registradoPor: auth.currentUser.email
       });
@@ -1105,6 +1131,7 @@
       document.getElementById("input-valor-litro").value = "";
       document.getElementById("autonomia-preview").style.display = "none";
       document.getElementById("form-abastecimento").style.display = "none";
+      window.selecionarCartao("NORMAL");
       toast("Abastecimento registrado.", "sucesso");
     }catch(e){
       console.error(e);
@@ -1410,8 +1437,7 @@
     abastecimentosDoPeriodo.forEach(a=>{
       const tr = document.createElement("tr");
       const dataObj = a.data?.toDate ? a.data.toDate() : null;
-      const registroLigado = a.viagemId ? registrosDoPeriodo.find(r=>r.id===a.viagemId) : null;
-      const viagemVinculada = a.viagemId ? (registroLigado ? (rotulosTipo[registroLigado.tipo]||registroLigado.tipo) : "Viagem fora do período") : "—";
+      const cartao = a.cartao || "NORMAL";
       tr.innerHTML =
         "<td>" + (dataObj ? dataObj.toLocaleString("pt-BR") : "—") + "</td>" +
         "<td class=\"mono\">" + (a.km?.toLocaleString("pt-BR") ?? "—") + "</td>" +
@@ -1419,7 +1445,7 @@
         "<td class=\"mono\">" + formatarMoeda(a.valorLitro) + "</td>" +
         "<td class=\"mono\">" + formatarMoeda(a.valorTotal) + "</td>" +
         "<td class=\"mono\">" + (a.autonomia ? a.autonomia.toFixed(2)+" km/l" : "—") + "</td>" +
-        "<td>" + viagemVinculada + "</td>";
+        "<td><span class=\"tipo-pill " + (cartao === "CORINGA" ? "outro" : "visita") + "\">" + cartao + "</span></td>";
       tbody.appendChild(tr);
     });
   }
@@ -1507,6 +1533,94 @@
         '<th>Assinatura</th><th>Itinerário</th></tr></thead>' +
         '<tbody>' + linhasHtml + '</tbody>' +
         '</table>' +
+        '<div class="rodape-pagina">Página ' + (pagina + 1) + ' de ' + totalPaginas + '</div>';
+      container.appendChild(paginaEl);
+    }
+
+    window.print();
+  };
+
+  window.gerarImpressaoCombustivel = function(){
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const mes = Number(document.getElementById("filtro-mes").value);
+    const ano = document.getElementById("filtro-ano").value;
+    const mesAno = meses[mes-1] + " / " + ano;
+
+    const linhas = abastecimentosDoPeriodo.map(a=>({
+      data: a.data?.toDate ? a.data.toDate() : null,
+      km: a.km,
+      litros: a.litros,
+      valorLitro: a.valorLitro,
+      valorTotal: a.valorTotal,
+      autonomia: a.autonomia,
+      cartao: a.cartao || "NORMAL"
+    }));
+
+    const totalLitros = linhas.reduce((s,l)=> s + (l.litros||0), 0);
+    const totalGasto = linhas.reduce((s,l)=> s + (l.valorTotal||0), 0);
+    const comAutonomia = linhas.filter(l=>l.autonomia);
+    const autonomiaMedia = comAutonomia.length
+      ? comAutonomia.reduce((s,l)=> s + l.autonomia, 0) / comAutonomia.length
+      : null;
+
+    const LINHAS_POR_PAGINA = 22;
+    const totalLinhasTabela = Math.max(linhas.length, LINHAS_POR_PAGINA);
+    const totalPaginas = Math.ceil(totalLinhasTabela / LINHAS_POR_PAGINA);
+
+    const container = document.getElementById("print-paginas");
+    container.innerHTML = "";
+
+    for(let pagina = 0; pagina < totalPaginas; pagina++){
+      const inicio = pagina * LINHAS_POR_PAGINA;
+      const fim = inicio + LINHAS_POR_PAGINA;
+      const ultimaPagina = pagina === totalPaginas - 1;
+
+      let linhasHtml = "";
+      for(let i = inicio; i < fim; i++){
+        const l = linhas[i];
+        if(l){
+          linhasHtml +=
+            "<tr>" +
+            "<td>" + (l.data ? l.data.toLocaleString("pt-BR") : "") + "</td>" +
+            "<td>" + (l.km?.toLocaleString("pt-BR") ?? "") + "</td>" +
+            "<td>" + (l.litros?.toLocaleString("pt-BR",{maximumFractionDigits:2}) ?? "") + "</td>" +
+            "<td>" + formatarMoeda(l.valorLitro) + "</td>" +
+            "<td>" + formatarMoeda(l.valorTotal) + "</td>" +
+            "<td>" + (l.autonomia ? l.autonomia.toFixed(2)+" km/l" : "") + "</td>" +
+            "<td>" + l.cartao + "</td>" +
+            "</tr>";
+        } else {
+          linhasHtml += "<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>";
+        }
+      }
+
+      const paginaEl = document.createElement("div");
+      paginaEl.className = "pagina-impressao";
+      paginaEl.innerHTML =
+        '<div class="print-cabecalho">' +
+        '<img src="' + LOGO_DARK_SRC + '" class="print-logo" alt="CRIL">' +
+        '<h1>RELATÓRIO DE ABASTECIMENTOS</h1>' +
+        '</div>' +
+        '<div class="print-meta">' +
+        '<div><b>' + mesAno + '</b>MÊS/ANO</div>' +
+        '<div><b>POLO TRACK</b>VEÍCULO</div>' +
+        '<div><b>SWA 7G41</b>PLACA</div>' +
+        '</div>' +
+        '<table class="print-tabela">' +
+        '<colgroup><col style="width:16%"><col style="width:12%"><col style="width:12%">' +
+        '<col style="width:14%"><col style="width:14%"><col style="width:16%"><col style="width:16%"></colgroup>' +
+        '<thead><tr><th>Data</th><th>KM</th><th>Litros</th><th>Valor/Litro</th><th>Total</th>' +
+        '<th>Autonomia</th><th>Cartão</th></tr></thead>' +
+        '<tbody>' + linhasHtml + '</tbody>' +
+        '</table>' +
+        (ultimaPagina ?
+          '<div class="resumo-combustivel">' +
+          '<div>Litros abastecidos<b>' + totalLitros.toLocaleString("pt-BR",{maximumFractionDigits:1}) + ' L</b></div>' +
+          '<div>Valor total gasto<b>' + formatarMoeda(totalGasto) + '</b></div>' +
+          '<div>Autonomia média<b>' + (autonomiaMedia ? autonomiaMedia.toFixed(2) + ' km/l' : '—') + '</b></div>' +
+          '</div>' +
+          '<div class="assinatura-gestao"><div class="linha-assinatura">Assinatura da Gestão</div></div>'
+          : '') +
         '<div class="rodape-pagina">Página ' + (pagina + 1) + ' de ' + totalPaginas + '</div>';
       container.appendChild(paginaEl);
     }
