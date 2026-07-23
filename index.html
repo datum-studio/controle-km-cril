@@ -873,6 +873,10 @@
       toast("KM não pode ser menor que a última registrada (" + ultimaKm.toLocaleString("pt-BR") + ").", "erro");
       return;
     }
+    if(ultimaKm != null && km === ultimaKm){
+      toast("KM igual à última registrada (" + ultimaKm.toLocaleString("pt-BR") + "). O carro andou até aqui? Confira o valor no painel.", "erro");
+      return;
+    }
     const hora = new Date(horaInput);
     try{
       await updateDoc(doc(db, "registros", viagemAberta.id), {
@@ -906,6 +910,10 @@
     const ultimaKm = ultimaKmConhecida();
     if(ultimaKm != null && km < ultimaKm){
       toast("KM não pode ser menor que a última registrada (" + ultimaKm.toLocaleString("pt-BR") + ").", "erro");
+      return;
+    }
+    if(ultimaKm != null && km === ultimaKm){
+      toast("KM igual à última parada (" + ultimaKm.toLocaleString("pt-BR") + "). Confira o valor no painel antes de confirmar a chegada.", "erro");
       return;
     }
     try{
