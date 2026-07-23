@@ -315,11 +315,11 @@
         <div id="bloco-iniciar">
           <div id="grupo-nome-usuario">
             <div class="field">
-              <label>Nome do usuário do veículo</label>
+              <label id="label-nome-usuario">Nome do usuário do veículo</label>
               <select id="select-nome-usuario" onchange="window.alternarUsuarioOutro()"></select>
             </div>
             <div class="field" id="campo-usuario-texto" style="display:none;">
-              <label>Digite o nome</label>
+              <label id="label-usuario-texto">Digite o nome</label>
               <input type="text" id="input-nome-usuario" class="upper" placeholder="NOME DE QUEM VAI USAR O CARRO">
             </div>
           </div>
@@ -601,6 +601,7 @@
 
   window.alternarUsuarioOutro = function(){
     const sel = document.getElementById("select-nome-usuario");
+    if(sel.multiple) return; // no modo múltiplo o campo de texto extra já fica sempre visível
     document.getElementById("campo-usuario-texto").style.display = sel.value === "OUTRO" ? "block" : "none";
   };
 
@@ -611,8 +612,16 @@
 
   function obterNomeUsuarioSelecionado(){
     const sel = document.getElementById("select-nome-usuario");
+    const extra = document.getElementById("input-nome-usuario").value.trim().toUpperCase();
+    if(sel.multiple){
+      const selecionados = Array.from(sel.selectedOptions)
+        .map(o=>o.value)
+        .filter(v=>v && v !== "OUTRO");
+      if(extra) selecionados.push(extra);
+      return selecionados.join(", ");
+    }
     if(sel.value && sel.value !== "OUTRO") return sel.value;
-    return document.getElementById("input-nome-usuario").value.trim().toUpperCase();
+    return extra;
   }
 
   function obterLocalParada(){
@@ -835,10 +844,21 @@
       b.classList.toggle("selecionado", b.dataset.tipo === tipo);
     });
     document.getElementById("grupo-nome-usuario").style.display = tipo === "outro" ? "none" : "block";
+    const sel = document.getElementById("select-nome-usuario");
     if(tipo === "visita_hospitalar"){
-      popularSelect(document.getElementById("select-nome-usuario"), USUARIOS_VISITA_HOSPITALAR);
+      sel.multiple = false;
+      sel.removeAttribute("size");
+      popularSelect(sel, USUARIOS_VISITA_HOSPITALAR);
+      document.getElementById("label-nome-usuario").textContent = "Nome do usuário do veículo";
+      document.getElementById("label-usuario-texto").textContent = "Digite o nome";
+      document.getElementById("campo-usuario-texto").style.display = "none";
     } else if(tipo === "viagem"){
-      popularSelect(document.getElementById("select-nome-usuario"), USUARIOS);
+      sel.multiple = true;
+      sel.size = Math.min(USUARIOS.length + 1, 6);
+      popularSelect(sel, USUARIOS);
+      document.getElementById("label-nome-usuario").textContent = "Usuários do veículo (selecione um ou mais, Ctrl/Cmd+clique para vários)";
+      document.getElementById("label-usuario-texto").textContent = "Adicionar outro nome (opcional)";
+      document.getElementById("campo-usuario-texto").style.display = "block";
     }
     document.getElementById("input-nome-usuario").value = "";
     document.getElementById("campo-usuario-texto").style.display = "none";
@@ -867,9 +887,13 @@
       });
       tipoSelecionado = null;
       document.querySelectorAll(".tipo-btn").forEach(b=>b.classList.remove("selecionado"));
-      document.getElementById("select-nome-usuario").value = "";
+      const selUsuario = document.getElementById("select-nome-usuario");
+      Array.from(selUsuario.options).forEach(o=> o.selected = false);
+      selUsuario.multiple = false;
+      selUsuario.removeAttribute("size");
       document.getElementById("input-nome-usuario").value = "";
       document.getElementById("campo-usuario-texto").style.display = "none";
+      document.getElementById("grupo-nome-usuario").style.display = "block";
       toast("Viagem iniciada.", "sucesso");
     }catch(e){
       console.error(e);

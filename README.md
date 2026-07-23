@@ -17,7 +17,7 @@ PWA para controle de quilometragem e abastecimento do veículo da Central de Reg
 - **Se o motorista esquecer de registrar algo**: (1) o motorista pode escolher manualmente o horário de cada parada, não fica preso ao "agora"; (2) o admin pode adicionar, corrigir ou remover paradas de qualquer viagem já registrada, na aba Registros; (3) o painel do admin mostra um aviso quando existe uma viagem em aberto há mais de 12h, sinal de que o motorista pode ter esquecido de finalizar
 - **KM do cartão de abastecimento**: existe um deslocamento fixo (resto de KM de um carro anterior) que se soma à KM real do carro para dar o número que o motorista informa ao posto. O admin configura esse deslocamento na aba Combustível; o motorista só vê o resultado já somado, em destaque, assim que digita a KM real do abastecimento
 - Estrutura de PWA (manifest + service worker) pronta para "instalar" no celular/tablet do motorista, com ícones reais da CRIL em `icons/icon-192.png` e `icons/icon-512.png` (arquivos de verdade, não mais em base64 — mais confiável para o Android reconhecer como instalável)
-- Em visita hospitalar, a lista de nomes de usuário é restrita a Eliete Castro, Katia Kalene e Maria Grasiela; em viagem, continua com a lista completa
+- Em visita hospitalar, a lista de nomes de usuário é restrita a Eliete Castro, Katia Kalene e Maria Grasiela; em viagem, continua com a lista completa, e permite **selecionar mais de um usuário** (Ctrl/Cmd+clique para selecionar vários), já que uma viagem longa pode levar mais de uma pessoa
 
 **Fora do escopo desta v1** (combinado com a Débora): OCR de leitura da KM (testado e removido — não funcionou bem), GPS, assinatura digital no app — ficam para uma v2, ou não avançam mais.
 
