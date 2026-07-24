@@ -5,12 +5,15 @@ PWA para gestão do veículo da Central de Regulação Interestadual de Leitos (
 ## Ajustes mais recentes
 
 - **Nova paleta de cores**: sistema todo migrado para o turquesa/verde-acinzentado da CRIL (#446256), com variações harmônicas — login, cabeçalho, botões, ícones do PWA e logo da impressão
-- Cartões de abastecimento agora têm cor visível **antes** de selecionar (Normal em azul-esverdeado, Coringa em âmbar), não só depois de marcado
-- Relatórios impressos com menos linhas por página (buffer de segurança contra overflow) e assinatura da Gestão com mais respiro, próxima ao rodapé
-- Botão de gerar PDF de registros renomeado para **"Gerar PDF de registros"** (mesmo padrão dos outros dois) e movido pra dentro da aba Registros — cada aba (Registros/Combustível/Manutenção) agora tem seu próprio botão de PDF, e o filtro de data continua compartilhado entre todas
+- Botões de seleção do motorista (tipo de deslocamento, cartão, checklist, abastecimento, troca de óleo) redesenhados: maiores, empilhados, com ícone — menos chance de toque errado
+- PDFs gerados agora vêm com nome de arquivo pronto (ex.: `Registros-CRIL_2026-07-01_a_2026-07-24.pdf`), sem precisar renomear ao baixar
+- Linhas por página reduzidas ainda mais nos três relatórios, como margem extra contra páginas em branco
+- `sw.js` com versão de cache atualizada (era `km-cril-v2`, agora `km-cril-v3`) — **esse arquivo também precisa ser reenviado ao GitHub**, senão o navegador de quem já visitou o site antes continua servindo a versão antiga em cache
+- Aviso de defeito no topo do painel do admin agora só reaparece quando surgir um checklist novo com defeito — some ao clicar em "Ver detalhes" ou no botão "Ciente"
+- Botão de gerar PDF de registros renomeado e movido pra dentro da aba Registros — cada aba (Registros/Combustível/Manutenção) agora tem seu próprio botão de PDF, e o filtro de data continua compartilhado entre todas
 - Ícones do PWA e favicon atualizados com a nova cor
 
-**Importante sobre os relatórios em PDF**: se ainda aparecer alguma página extra em branco ao gerar o PDF, quase sempre é porque a opção **"Cabeçalhos e rodapés"** do navegador está marcada na hora de imprimir — ela ocupa espaço extra na página (data, URL, numeração do Chrome) que não entra nos nossos cálculos. Desmarcar essa opção na tela de impressão resolve.
+**Sobre páginas em branco na impressão**: se ainda aparecer, o motivo mais provável é a opção **"Cabeçalhos e rodapés"** do navegador estar marcada na tela de impressão — ela ocupa um espaço extra (data, URL, numeração do próprio Chrome) que não entra nos nossos cálculos de quantas linhas cabem por página, e pode empurrar conteúdo para uma página extra. Antes de salvar o PDF, clique em **"Mais configurações"** e desmarque essa opção.
 
 ## O que já está pronto (v1)
 
