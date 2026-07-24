@@ -4,17 +4,13 @@ PWA para gestão do veículo da Central de Regulação Interestadual de Leitos (
 
 ## Ajustes mais recentes
 
-- Cartões de abastecimento com cores diferentes: **Normal** (azul) e **Coringa** (âmbar), pra evitar confusão na hora de escolher
-- Relatórios impressos (KM, combustível, checklist) não geram mais linhas nem páginas em branco — só imprime o que existe de fato
-- Novo botão **"Gerar PDF do checklist"** na aba Manutenção, com o histórico completo de defeitos do período
-- Todos os filtros do admin agora são por **data com dia** (De/Até), não mais só por mês
-- Dashboard reformulado: **autonomia atual** (km/l do último abastecimento), **defeitos no último checklist**, e contadores por **tipo de deslocamento** (visita hospitalar / viagem / outro) no lugar de "viagens registradas"/"paradas registradas"
-- Sistema renomeado de "Controle de KM" para **Gestão de Frota**, já que cobre bem mais que só KM
-- Tela inicial do motorista mostra a **data do último checklist enviado**, não só o aviso de pendência
-- Aviso no topo do painel do admin quando o último checklist tem algum defeito sinalizado
-- Histórico do checklist agora lista **todos os itens com defeito** de cada envio (não só a contagem), e não mostra mais quem enviou
-- Saudação personalizada: o nome de cada motorista fica cadastrado no Firestore (campo `nome` em `usuarios/{uid}`), e o app mostra "Olá, Fulano!" automaticamente ao entrar — sem precisar perguntar toda vez. Esse nome também identifica quem registrou cada viagem/abastecimento/checklist nos relatórios, em vez do e-mail (já preparado para quando houver mais de um motorista, cada um com seu próprio login)
-- Registro do service worker movido pro início do carregamento do app, isolado de qualquer erro — se a instalação do PWA ainda não funcionar depois disso, o próximo passo é revisar o DevTools (aba Application → Manifest) direto no navegador
+- **Nova paleta de cores**: sistema todo migrado para o turquesa/verde-acinzentado da CRIL (#446256), com variações harmônicas — login, cabeçalho, botões, ícones do PWA e logo da impressão
+- Cartões de abastecimento agora têm cor visível **antes** de selecionar (Normal em azul-esverdeado, Coringa em âmbar), não só depois de marcado
+- Relatórios impressos com menos linhas por página (buffer de segurança contra overflow) e assinatura da Gestão com mais respiro, próxima ao rodapé
+- Botão de gerar PDF de registros renomeado para **"Gerar PDF de registros"** (mesmo padrão dos outros dois) e movido pra dentro da aba Registros — cada aba (Registros/Combustível/Manutenção) agora tem seu próprio botão de PDF, e o filtro de data continua compartilhado entre todas
+- Ícones do PWA e favicon atualizados com a nova cor
+
+**Importante sobre os relatórios em PDF**: se ainda aparecer alguma página extra em branco ao gerar o PDF, quase sempre é porque a opção **"Cabeçalhos e rodapés"** do navegador está marcada na hora de imprimir — ela ocupa espaço extra na página (data, URL, numeração do Chrome) que não entra nos nossos cálculos. Desmarcar essa opção na tela de impressão resolve.
 
 ## O que já está pronto (v1)
 
@@ -107,6 +103,7 @@ service cloud.firestore {
 Mesmo padrão dos outros projetos Datum Studio: subir esta pasta para um repositório e ativar o GitHub Pages apontando para a branch/pasta raiz. **Importante**: a pasta `icons/` (com `icon-192.png` e `icon-512.png`) precisa subir junto — sem ela, o Android não reconhece o app como instalável.
 
 ### 8. Se o PWA não aparecer como instalável no Android
+- **Causa confirmada em teste real**: o navegador reportou erro 404 ao buscar `icons/icon-192.png` — ou seja, a pasta `icons/` não estava (ou não estava mais) publicada no repositório. Reenvie essa pasta pro GitHub e confirme que os dois arquivos abrem direto pela URL (ex.: `https://seu-usuario.github.io/controle-km-cril/icons/icon-192.png`) antes de tentar instalar de novo
 - Confirme que a pasta `icons/` foi enviada ao repositório (ela precisa estar publicada, não só existir localmente)
 - No Chrome do celular, abra o menu (⋮) → deve aparecer "Instalar aplicativo" ou "Adicionar à tela inicial" mesmo sem o banner automático aparecer sozinho
 - Se quiser conferir o que está travando, no computador abra a URL publicada no Chrome, aperte F12 → aba **Application** → **Manifest**: ali aparece qualquer erro de ícone ou configuração
@@ -169,5 +166,4 @@ Observações:
 - As listas de hospitais (`HOSPITAIS`) e usuários (`USUARIOS`) sugeridos ficam no início do `<script>` do `index.html` — para adicionar/editar nomes, é só editar esses dois arrays diretamente no código.
 
 ## Próximos passos sugeridos (v2)
-- OCR de leitura da KM via foto (Tesseract.js ou Google Cloud Vision)
-- Ícones reais do PWA (`icons/icon-192.png`, `icons/icon-512.png` — hoje ausentes)
+- OCR de leitura da KM via foto (Tesseract.js ou Google Cloud Vision) — já testado uma vez e removido por não funcionar bem; pode valer revisitar com outra abordagem
