@@ -267,11 +267,10 @@
   .toast.sucesso{background:var(--verde);}
 
   #print-area{display:none;}
-  @page{ size: landscape; margin: 10mm 10mm 14mm 10mm; }
+  @page{ size: landscape; margin: 10mm; }
   @media print{
-    body *{visibility:hidden;}
-    #print-area, #print-area *{visibility:visible;}
-    #print-area{display:block; position:absolute; top:0; left:0; width:100%; padding:6px;}
+    #login-screen, #app-screen, .toast{display:none !important;}
+    #print-area{display:block !important; position:static; width:100%; padding:0;}
     .pagina-impressao{page-break-after: always;}
     .pagina-impressao:last-child{page-break-after: auto;}
     .print-cabecalho{text-align:center; margin-bottom:10px;}
@@ -284,10 +283,9 @@
     table.print-tabela th{font-size:9px; text-transform:uppercase;}
     table.print-tabela td.itinerario{text-align:left;}
     .print-logo{height:30px; margin:0 auto 6px;}
-    .rodape-pagina{text-align:center; font-size:9px; color:#333; margin-top:10px; padding-top:6px; border-top:1px solid #ddd;}
     .resumo-combustivel{display:flex; justify-content:space-around; margin:14px 0; font-size:11px; text-align:center;}
     .resumo-combustivel b{display:block; font-size:13px;}
-    .assinatura-gestao{margin-top:85px; margin-bottom:10px; display:flex; justify-content:center;}
+    .assinatura-gestao{margin-top:60px; margin-bottom:10px; display:flex; justify-content:center;}
     .assinatura-gestao .linha-assinatura{width:320px; border-top:1px solid #333; padding-top:6px; text-align:center; font-size:10px;}
   }
 </style>
@@ -2005,8 +2003,7 @@
         '<thead><tr><th>Data</th><th>Hora Inicial</th><th>Hora Final</th><th>KM Inicial</th><th>KM Final</th>' +
         '<th>Assinatura</th><th>Itinerário</th></tr></thead>' +
         '<tbody>' + linhasHtml + '</tbody>' +
-        '</table>' +
-        '<div class="rodape-pagina">Página ' + (pagina + 1) + ' de ' + totalPaginas + '</div>';
+        '</table>';
       container.appendChild(paginaEl);
     }
 
@@ -2089,8 +2086,7 @@
           '<div>Autonomia média<b>' + (autonomiaMedia ? autonomiaMedia.toFixed(2) + ' km/l' : '—') + '</b></div>' +
           '</div>' +
           '<div class="assinatura-gestao"><div class="linha-assinatura">Assinatura da Gestão</div></div>'
-          : '') +
-        '<div class="rodape-pagina">Página ' + (pagina + 1) + ' de ' + totalPaginas + '</div>';
+          : '');
       container.appendChild(paginaEl);
     }
 
@@ -2166,8 +2162,7 @@
         '<col style="width:16%"><col style="width:32%"></colgroup>' +
         '<thead><tr><th>Checklist enviado em</th><th>Categoria</th><th>Item</th><th>Status</th><th>Observação</th></tr></thead>' +
         '<tbody>' + linhasHtml + '</tbody>' +
-        '</table>' +
-        '<div class="rodape-pagina">Página ' + (pagina + 1) + ' de ' + totalPaginas + '</div>';
+        '</table>';
       container.appendChild(paginaEl);
     }
 

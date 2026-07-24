@@ -4,16 +4,15 @@ PWA para gestão do veículo da Central de Regulação Interestadual de Leitos (
 
 ## Ajustes mais recentes
 
+- **Causa raiz das páginas em branco encontrada e corrigida**: o CSS de impressão escondia o resto do app com `visibility:hidden`, que esconde visualmente mas continua ocupando o espaço no layout — como a tela do app é bem mais alta que uma folha impressa, isso gerava páginas extra em branco depois do relatório. Trocado para `display:none`, que remove esse conteúdo do fluxo da página de verdade
+- Numeração de página removida dos três relatórios (registros, abastecimentos, checklist) — não estava ficando no rodapé como devia, e sem ela os relatórios ficam mais simples e sem risco de gerar página extra por causa do cálculo
 - **Nova paleta de cores**: sistema todo migrado para o turquesa/verde-acinzentado da CRIL (#446256), com variações harmônicas — login, cabeçalho, botões, ícones do PWA e logo da impressão
 - Botões de seleção do motorista (tipo de deslocamento, cartão, checklist, abastecimento, troca de óleo) redesenhados: maiores, empilhados, com ícone — menos chance de toque errado
 - PDFs gerados agora vêm com nome de arquivo pronto (ex.: `Registros-CRIL_2026-07-01_a_2026-07-24.pdf`), sem precisar renomear ao baixar
-- Linhas por página reduzidas ainda mais nos três relatórios, como margem extra contra páginas em branco
 - `sw.js` com versão de cache atualizada (era `km-cril-v2`, agora `km-cril-v3`) — **esse arquivo também precisa ser reenviado ao GitHub**, senão o navegador de quem já visitou o site antes continua servindo a versão antiga em cache
 - Aviso de defeito no topo do painel do admin agora só reaparece quando surgir um checklist novo com defeito — some ao clicar em "Ver detalhes" ou no botão "Ciente"
 - Botão de gerar PDF de registros renomeado e movido pra dentro da aba Registros — cada aba (Registros/Combustível/Manutenção) agora tem seu próprio botão de PDF, e o filtro de data continua compartilhado entre todas
 - Ícones do PWA e favicon atualizados com a nova cor
-
-**Sobre páginas em branco na impressão**: se ainda aparecer, o motivo mais provável é a opção **"Cabeçalhos e rodapés"** do navegador estar marcada na tela de impressão — ela ocupa um espaço extra (data, URL, numeração do próprio Chrome) que não entra nos nossos cálculos de quantas linhas cabem por página, e pode empurrar conteúdo para uma página extra. Antes de salvar o PDF, clique em **"Mais configurações"** e desmarque essa opção.
 
 ## O que já está pronto (v1)
 
@@ -106,11 +105,11 @@ service cloud.firestore {
 Mesmo padrão dos outros projetos Datum Studio: subir esta pasta para um repositório e ativar o GitHub Pages apontando para a branch/pasta raiz. **Importante**: a pasta `icons/` (com `icon-192.png` e `icon-512.png`) precisa subir junto — sem ela, o Android não reconhece o app como instalável.
 
 ### 8. Se o PWA não aparecer como instalável no Android
-- **Causa confirmada em teste real**: o navegador reportou erro 404 ao buscar `icons/icon-192.png` — ou seja, a pasta `icons/` não estava (ou não estava mais) publicada no repositório. Reenvie essa pasta pro GitHub e confirme que os dois arquivos abrem direto pela URL (ex.: `https://seu-usuario.github.io/controle-km-cril/icons/icon-192.png`) antes de tentar instalar de novo
+- **Teste direto e definitivo**: abra `https://datum-studio.github.io/controle-km-cril/icons/icon-192.png` direto no navegador. Se aparecer a imagem do ícone, o arquivo está publicado corretamente; se der erro 404/página não encontrada, a pasta `icons/` ainda não está no repositório (ou está num lugar errado) — esse é o motivo mais provável do PWA não instalar, tanto no PC quanto no celular
 - Confirme que a pasta `icons/` foi enviada ao repositório (ela precisa estar publicada, não só existir localmente)
-- No Chrome do celular, abra o menu (⋮) → deve aparecer "Instalar aplicativo" ou "Adicionar à tela inicial" mesmo sem o banner automático aparecer sozinho
+- No Chrome do celular, abra o menu (⋮) → deve aparecer "Instalar aplicativo" ou "Adicionar à tela inicial" mesmo sem o banner automático aparecer sozinho. No computador, o ícone de instalação normalmente aparece dentro da barra de endereço, à direita
 - Se quiser conferir o que está travando, no computador abra a URL publicada no Chrome, aperte F12 → aba **Application** → **Manifest**: ali aparece qualquer erro de ícone ou configuração
-- Depois de qualquer atualização de arquivo, é bom fechar e reabrir a aba (ou limpar o cache do site) antes de tentar instalar de novo, já que o service worker guarda uma cópia antiga em cache
+- Depois de qualquer atualização de arquivo (incluindo o `sw.js`), é bom fechar e reabrir a aba (ou limpar o cache do site) antes de tentar instalar de novo, já que o service worker guarda uma cópia antiga em cache
 
 ## Estrutura de dados (Firestore)
 
