@@ -1,6 +1,20 @@
-# Controle de KM · CRIL
+# Gestão de Frota · CRIL
 
-PWA para controle de quilometragem e abastecimento do veículo da Central de Regulação Interestadual de Leitos (Polo Track, placa SWA 7G41), substituindo a planilha impressa.
+PWA para gestão do veículo da Central de Regulação Interestadual de Leitos (Polo Track, placa SWA 7G41) — controle de quilometragem, abastecimento e checklist semanal, substituindo a planilha impressa.
+
+## Ajustes mais recentes
+
+- Cartões de abastecimento com cores diferentes: **Normal** (azul) e **Coringa** (âmbar), pra evitar confusão na hora de escolher
+- Relatórios impressos (KM, combustível, checklist) não geram mais linhas nem páginas em branco — só imprime o que existe de fato
+- Novo botão **"Gerar PDF do checklist"** na aba Manutenção, com o histórico completo de defeitos do período
+- Todos os filtros do admin agora são por **data com dia** (De/Até), não mais só por mês
+- Dashboard reformulado: **autonomia atual** (km/l do último abastecimento), **defeitos no último checklist**, e contadores por **tipo de deslocamento** (visita hospitalar / viagem / outro) no lugar de "viagens registradas"/"paradas registradas"
+- Sistema renomeado de "Controle de KM" para **Gestão de Frota**, já que cobre bem mais que só KM
+- Tela inicial do motorista mostra a **data do último checklist enviado**, não só o aviso de pendência
+- Aviso no topo do painel do admin quando o último checklist tem algum defeito sinalizado
+- Histórico do checklist agora lista **todos os itens com defeito** de cada envio (não só a contagem), e não mostra mais quem enviou
+- Saudação personalizada: o nome de cada motorista fica cadastrado no Firestore (campo `nome` em `usuarios/{uid}`), e o app mostra "Olá, Fulano!" automaticamente ao entrar — sem precisar perguntar toda vez. Esse nome também identifica quem registrou cada viagem/abastecimento/checklist nos relatórios, em vez do e-mail (já preparado para quando houver mais de um motorista, cada um com seu próprio login)
+- Registro do service worker movido pro início do carregamento do app, isolado de qualquer erro — se a instalação do PWA ainda não funcionar depois disso, o próximo passo é revisar o DevTools (aba Application → Manifest) direto no navegador
 
 ## O que já está pronto (v1)
 
@@ -52,15 +66,17 @@ No Firebase Console → Authentication → **Adicionar usuário**, crie:
 - Um usuário para o motorista (ex.: `motorista@cril.local` + um PIN numérico como senha)
 - Um usuário para o admin (seu e-mail + senha)
 
-### 4. Definir o perfil de cada usuário no Firestore
-Crie manualmente a coleção `usuarios` com um documento por usuário, usando o **UID** de cada um (copiado da tela de Authentication) como ID do documento:
+### 4. Definir o perfil (e o nome) de cada usuário no Firestore
+Crie manualmente a coleção `usuarios` com um documento por usuário, usando o **UID** de cada um (copiado da tela de Authentication) como ID do documento. Além do `perfil`, cadastre também o campo `nome` — é ele que aparece na saudação da tela inicial e identifica quem registrou cada viagem/abastecimento/checklist nos relatórios (em vez do e-mail). Isso já deixa o sistema pronto para quando houver mais de um motorista: cada um com seu próprio login e seu próprio nome:
 
 ```
 usuarios/{uid-do-motorista}
   perfil: "motorista"
+  nome: "NOME DO MOTORISTA"
 
 usuarios/{uid-do-admin}
   perfil: "admin"
+  nome: "NOME DO ADMIN"
 ```
 
 ### 5. Criar o documento inicial do veículo
@@ -119,7 +135,7 @@ registros/{id}
   kmRodado: number | null
   horaInicial: timestamp
   horaFinal: timestamp | null
-  registradoPor: string (e-mail)
+  registradoPor: string (nome do usuário logado, com e-mail como reserva se o nome não estiver cadastrado)
   editadoPor: string | null
   editadoEm: timestamp | null
 
@@ -133,15 +149,16 @@ abastecimentos/{id}
   autonomia: number | null (km/l desde o abastecimento anterior)
   cartao: "NORMAL" | "CORINGA"
   viagemId: string | null (registro de viagem em aberto no momento, se houver)
-  registradoPor: string (e-mail)
+  registradoPor: string (nome do usuário logado, com e-mail como reserva se o nome não estiver cadastrado)
 
 usuarios/{uid}
   perfil: "motorista" | "admin"
+  nome: string (usado na saudação e para identificar quem registrou algo nos relatórios)
 
 checklists/{id}
   semanaInicio: string ("YYYY-MM-DD" da segunda-feira daquela semana, usado para saber se já foi feito)
   data: timestamp (momento do envio)
-  registradoPor: string (e-mail)
+  registradoPor: string (nome do usuário logado, com e-mail como reserva se o nome não estiver cadastrado)
   itens: array de { categoria: string, item: string, status: string (ex.: "OK", "Nível baixo", "Queimado", "Careca/seco" — específico por item), descricao: string (observação opcional) }
 ```
 
