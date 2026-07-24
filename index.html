@@ -170,7 +170,7 @@
   }
   .checklist-item-topo{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;}
   .checklist-item-nome{font-size:13px; font-weight:600;}
-  .checklist-status-btns{display:flex; gap:6px;}
+  .checklist-status-btns{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;}
   .status-btn{
     padding:6px 12px; border-radius:6px; border:1.5px solid var(--linha); background:#fff;
     font-size:12px; font-weight:700; color:var(--texto-2); cursor:pointer;
@@ -682,16 +682,38 @@
   ];
 
   const CHECKLIST_CATEGORIAS = [
-    { nome: "Fluidos e níveis", itens: ["Óleo do motor", "Líquido de arrefecimento"] },
-    { nome: "Elétrica e iluminação", itens: ["Farol baixo", "Farol alto", "Luz de freio", "Luz de ré", "Setas", "Luzes do painel/outras", "Buzina"] },
-    { nome: "Pneus e freios", itens: ["Pneus", "Estepe", "Freios"] },
-    { nome: "Segurança e conforto", itens: ["Cinto de segurança", "Para-brisa", "Palhetas do limpador"] },
-    { nome: "Bateria e mecânica", itens: ["Bateria", "Parte mecânica"] },
+    { nome: "Fluidos e níveis", itens: [
+      { nome: "Óleo do motor", opcoes: ["OK", "Nível baixo", "Vazando", "Sujo/vencido"] },
+      { nome: "Líquido de arrefecimento", opcoes: ["OK", "Nível baixo", "Sujo", "Vazando"] }
+    ]},
+    { nome: "Elétrica e iluminação", itens: [
+      { nome: "Farol baixo", opcoes: ["OK", "Queimado", "Quebrado", "Desregulado"] },
+      { nome: "Farol alto", opcoes: ["OK", "Queimado", "Quebrado", "Desregulado"] },
+      { nome: "Luz de freio", opcoes: ["OK", "Queimada"] },
+      { nome: "Luz de ré", opcoes: ["OK", "Queimada"] },
+      { nome: "Setas", opcoes: ["OK", "Queimada"] },
+      { nome: "Luzes do painel/outras", opcoes: ["OK", "Queimada", "Acesa/alerta ligado"] },
+      { nome: "Buzina", opcoes: ["OK", "Não funciona", "Som fraco"] }
+    ]},
+    { nome: "Pneus e freios", itens: [
+      { nome: "Pneus", opcoes: ["OK", "Careca/seco", "Murcho", "Bolha/dano", "Desalinhado"] },
+      { nome: "Estepe", opcoes: ["OK", "Murcho", "Danificado", "Ausente"] },
+      { nome: "Freios", opcoes: ["OK", "Gasto", "Ruído ao frear", "Mole/baixo"] }
+    ]},
+    { nome: "Segurança e conforto", itens: [
+      { nome: "Cinto de segurança", opcoes: ["OK", "Travando", "Danificado"] },
+      { nome: "Para-brisa", opcoes: ["OK", "Trincado", "Quebrado"] },
+      { nome: "Palhetas do limpador", opcoes: ["OK", "Ressecada", "Não limpa direito"] }
+    ]},
+    { nome: "Bateria e mecânica", itens: [
+      { nome: "Bateria", opcoes: ["OK", "Fraca", "Não segura carga", "Terminais oxidados"] },
+      { nome: "Parte mecânica", opcoes: ["OK", "Ruído estranho", "Vazamento"] }
+    ]},
     { nome: "Lataria (riscos e amassados)", itens: [
       "Para-choque dianteiro", "Para-choque traseiro", "Capô",
       "Porta dianteira direita", "Porta dianteira esquerda",
       "Porta traseira direita", "Porta traseira esquerda", "Teto/lateral"
-    ] }
+    ].map(nome=>({ nome, opcoes: ["OK", "Risco", "Amassado", "Risco e amassado"] })) }
   ];
 
   function popularSelect(selectEl, opcoes){
@@ -899,12 +921,12 @@
       const c = snap.docs[0].data();
       const data = c.data?.toDate ? c.data.toDate() : null;
       dataEl.textContent = data ? data.toLocaleString("pt-BR") : "—";
-      const defeitos = (c.itens || []).filter(i=>i.status === "defeito");
+      const defeitos = (c.itens || []).filter(i=>i.status && i.status !== "OK");
       if(!defeitos.length){
         corpo.innerHTML = '<div class="aviso-card verde">✅ Nenhum defeito sinalizado no último checklist.</div>';
       } else {
         corpo.innerHTML = defeitos.map(def=>
-          '<div class="parada-item"><div><div class="parada-local">' + def.item + '</div>'
+          '<div class="parada-item"><div><div class="parada-local">' + def.item + ' — ' + def.status + '</div>'
           + '<div class="parada-meta">' + def.categoria + (def.descricao ? " — " + def.descricao : "") + '</div></div></div>'
         ).join("");
       }
@@ -920,7 +942,7 @@
       snap.docs.forEach(docSnap=>{
         const c = docSnap.data();
         const data = c.data?.toDate ? c.data.toDate() : null;
-        const totalDefeitos = (c.itens || []).filter(i=>i.status === "defeito").length;
+        const totalDefeitos = (c.itens || []).filter(i=>i.status && i.status !== "OK").length;
         const tr = document.createElement("tr");
         tr.innerHTML =
           "<td>" + (data ? data.toLocaleString("pt-BR") : "—") + "</td>" +
@@ -1082,14 +1104,16 @@
     CHECKLIST_CATEGORIAS.forEach(cat=>{
       html += '<div class="checklist-categoria"><h3>' + cat.nome + '</h3>';
       cat.itens.forEach(item=>{
-        html += '<div class="checklist-item" data-item="' + item + '" data-categoria="' + cat.nome + '">'
+        html += '<div class="checklist-item" data-item="' + item.nome + '" data-categoria="' + cat.nome + '">'
           + '<div class="checklist-item-topo">'
-          + '<span class="checklist-item-nome">' + item + '</span>'
+          + '<span class="checklist-item-nome">' + item.nome + '</span>'
+          + '</div>'
           + '<div class="checklist-status-btns">'
-          + '<button type="button" class="status-btn ok selecionado" onclick="window.marcarStatusChecklist(this,\'ok\')">OK</button>'
-          + '<button type="button" class="status-btn defeito" onclick="window.marcarStatusChecklist(this,\'defeito\')">Defeito</button>'
-          + '</div></div>'
-          + '<div class="checklist-item-descricao"><input type="text" class="upper" placeholder="O QUE ESTÁ COM DEFEITO?"></div>'
+          + item.opcoes.map(op=>
+              '<button type="button" class="status-btn ' + (op === "OK" ? "ok" : "defeito") + '" onclick="window.marcarStatusChecklist(this,\'' + op.replace(/'/g,"\\'") + '\')">' + op + '</button>'
+            ).join("")
+          + '</div>'
+          + '<div class="checklist-item-descricao"><input type="text" class="upper" placeholder="OBSERVAÇÃO (OPCIONAL)"></div>'
           + '</div>';
       });
       html += '</div>';
@@ -1098,11 +1122,12 @@
     container.querySelectorAll("input.upper").forEach(ligarUpper);
   }
 
-  window.marcarStatusChecklist = function(btn, status){
+  window.marcarStatusChecklist = function(btn, opcao){
     const item = btn.closest(".checklist-item");
     item.querySelectorAll(".status-btn").forEach(b=>b.classList.remove("selecionado"));
     btn.classList.add("selecionado");
-    item.querySelector(".checklist-item-descricao").style.display = status === "defeito" ? "block" : "none";
+    item.dataset.status = opcao;
+    item.querySelector(".checklist-item-descricao").style.display = opcao === "OK" ? "none" : "block";
   };
 
   window.alternarFormChecklist = function(){
@@ -1117,17 +1142,24 @@
 
   window.enviarChecklist = async function(){
     const itens = [];
-    let faltaDescricao = false;
+    let itensNaoMarcados = 0;
     document.querySelectorAll("#checklist-categorias .checklist-item").forEach(el=>{
       const categoria = el.dataset.categoria;
       const item = el.dataset.item;
-      const selecionado = el.querySelector(".status-btn.selecionado");
-      const status = selecionado && selecionado.classList.contains("defeito") ? "defeito" : "ok";
+      const status = el.dataset.status || null;
+      if(!status){
+        itensNaoMarcados++;
+        el.style.borderColor = "var(--vermelho)";
+      } else {
+        el.style.borderColor = "";
+      }
       const descricao = el.querySelector(".checklist-item-descricao input").value.trim().toUpperCase();
-      if(status === "defeito" && !descricao) faltaDescricao = true;
       itens.push({ categoria, item, status, descricao });
     });
-    if(faltaDescricao){ toast("Descreva o defeito de todos os itens marcados como Defeito.", "erro"); return; }
+    if(itensNaoMarcados > 0){
+      toast(itensNaoMarcados + " item(ns) sem marcação. Marque todos antes de enviar.", "erro");
+      return;
+    }
 
     try{
       await addDoc(collection(db, "checklists"), {
