@@ -111,6 +111,10 @@
   .btn-sair{background:rgba(255,255,255,.12); color:#fff; padding:8px 12px; border-radius:8px; font-size:13px; font-weight:600;}
 
   main{flex:1; padding:20px; max-width:960px; width:100%; margin:0 auto;}
+  .rodape-autoria{
+    text-align:center; padding:14px 20px 20px; font-size:11px; color:var(--texto-2);
+    opacity:.75;
+  }
 
   .card{
     background:var(--superficie); border-radius:var(--radius); padding:22px;
@@ -489,6 +493,10 @@
 
         <hr class="divisor">
 
+        <div class="aviso-card" style="background:var(--vermelho-bg); border-color:var(--vermelho); color:var(--vermelho); font-weight:600;">
+          ⚠️ Caso seja identificada qualquer irregularidade que comprometa a segurança ou a utilização do veículo, comunique imediatamente ao responsável pela frota antes de iniciar o deslocamento.
+        </div>
+
         <button class="abastecimento-toggle" style="border-color:var(--roxo); background:var(--roxo-bg); color:var(--roxo);" onclick="window.alternarFormChecklist()"><span class="tipo-icone">📋</span>Fazer checklist diário do carro</button>
         <div id="form-checklist" style="display:none; margin-top:14px;">
           <div id="checklist-categorias"></div>
@@ -669,6 +677,7 @@
       </div>
     </div>
   </main>
+  <footer class="rodape-autoria">Desenvolvido por Débora Silva Lopes — Analista de Dados CRIL</footer>
 </div>
 
 <div id="print-area">
