@@ -609,7 +609,7 @@
             <table class="registros">
               <thead>
                 <tr>
-                  <th>Data</th><th>KM</th><th>Litros</th><th>Valor/Litro</th><th>Total</th><th>Autonomia</th><th>Cartão</th>
+                  <th>Data</th><th>KM no abastecimento</th><th>Litros</th><th>Valor/Litro</th><th>Total</th><th>Autonomia</th><th>Cartão</th>
                 </tr>
               </thead>
               <tbody id="tabela-combustivel-body"></tbody>
@@ -1065,7 +1065,7 @@
           "<td>" + (data ? data.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—") + "</td>" +
           "<td>" + (c.motorista || "—") + "</td>" +
           "<td style=\"white-space:nowrap;\">" +
-          "<button class=\"btn-link\" onclick=\"window.alternarEdicaoChecklist('" + c.id + "')\">" + (expandido ? "Fechar" : "Editar") + "</button> " +
+          "<button class=\"btn-link\" style=\"margin-right:16px;\" onclick=\"window.alternarEdicaoChecklist('" + c.id + "')\">" + (expandido ? "Fechar" : "Editar") + "</button>" +
           "<button class=\"btn-link\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button>" +
           "</td>";
         tbody.appendChild(tr);
@@ -1130,7 +1130,7 @@
         "<td>" + (data ? data.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—") + "</td>" +
         "<td>" + (c.motorista || "—") + "</td>" +
         "<td style=\"white-space:nowrap;\">" +
-        "<button class=\"btn-link\" onclick=\"window.alternarEdicaoChecklist('" + c.id + "')\">" + (expandido ? "Fechar" : "Editar") + "</button> " +
+        "<button class=\"btn-link\" style=\"margin-right:16px;\" onclick=\"window.alternarEdicaoChecklist('" + c.id + "')\">" + (expandido ? "Fechar" : "Editar") + "</button>" +
         "<button class=\"btn-link\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button>" +
         "</td>";
       tbody.appendChild(tr);
@@ -1369,6 +1369,15 @@
     }
   };
 
+  function fecharSecoesMotorista(){
+    ["abastecimento","checklist","oleo"].forEach(s=>{
+      const painel = document.getElementById("secao-" + s);
+      const tab = document.getElementById("tab-motorista-" + s);
+      if(painel) painel.style.display = "none";
+      if(tab) tab.classList.remove("ativa");
+    });
+  }
+
   window.abrirChecklistDoAviso = function(){
     window.mudarSecaoMotorista("checklist");
     setTimeout(()=>{
@@ -1473,6 +1482,7 @@
       document.getElementById("input-checklist-providencias").value = "";
       window.limparAssinatura();
       toast("Checklist enviado.", "sucesso");
+      fecharSecoesMotorista();
     }catch(e){
       console.error(e);
       toast("Erro ao enviar checklist.", "erro");
@@ -1529,6 +1539,7 @@
         dataUltimaTrocaOleo: serverTimestamp()
       }, { merge: true });
       toast("Troca de óleo registrada.", "sucesso");
+      fecharSecoesMotorista();
     }catch(e){
       console.error(e);
       toast("Erro ao registrar troca de óleo.", "erro");
@@ -1810,6 +1821,7 @@
       document.getElementById("autonomia-preview").style.display = "none";
       window.selecionarCartao("NORMAL");
       toast("Abastecimento registrado.", "sucesso");
+      fecharSecoesMotorista();
     }catch(e){
       console.error(e);
       toast("Erro ao registrar abastecimento.", "erro");
@@ -2280,9 +2292,9 @@
         '<div><b>SWA 7G41</b>PLACA</div>' +
         '</div>' +
         '<table class="print-tabela">' +
-        '<colgroup><col style="width:16%"><col style="width:12%"><col style="width:12%">' +
-        '<col style="width:14%"><col style="width:14%"><col style="width:16%"><col style="width:16%"></colgroup>' +
-        '<thead><tr><th>Data</th><th>KM</th><th>Litros</th><th>Valor/Litro</th><th>Total</th>' +
+        '<colgroup><col style="width:14%"><col style="width:16%"><col style="width:12%">' +
+        '<col style="width:14%"><col style="width:12%"><col style="width:16%"><col style="width:16%"></colgroup>' +
+        '<thead><tr><th>Data</th><th>KM no abastecimento</th><th>Litros</th><th>Valor/Litro</th><th>Total</th>' +
         '<th>Autonomia</th><th>Cartão</th></tr></thead>' +
         '<tbody>' + linhasHtml + '</tbody>' +
         '</table>' +
