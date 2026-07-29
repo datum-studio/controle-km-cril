@@ -42,6 +42,7 @@
   }
   .mono{font-family:'IBM Plex Mono',monospace; font-variant-numeric: tabular-nums;}
   button{font-family:inherit; cursor:pointer;}
+  .tab, [onclick]{cursor:pointer;}
   input, select, textarea{font-family:inherit; font-size:15px;}
   input.upper{text-transform:uppercase;}
 
@@ -201,13 +202,14 @@
   .parada-item .parada-meta{color:var(--texto-2); font-size:12px;}
   .parada-vazia{color:var(--texto-2); font-size:13px; font-style:italic; padding:8px 0;}
 
-  .abastecimento-toggle{
-    width:100%; padding:18px 16px; border-radius:10px; border:2px solid var(--ambar);
-    background:var(--ambar-bg); color:var(--ambar); font-weight:700; font-size:16px;
-    display:flex; align-items:center; justify-content:center; gap:10px; min-height:56px;
+  .tabs-motorista{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+  .tab-motorista{
+    padding:14px 6px; border-radius:10px; border:2px solid var(--linha); background:#fff;
+    color:var(--texto-2); font-weight:700; font-size:13px;
+    display:flex; flex-direction:column; align-items:center; gap:4px; min-height:64px;
   }
-  .abastecimento-toggle .tipo-icone{font-size:22px;}
-  #form-abastecimento{display:none; margin-top:14px; padding-top:14px; border-top:1.5px solid var(--linha);}
+  .tab-motorista .tipo-icone{font-size:22px;}
+  .tab-motorista.ativa{border-color:var(--azul-800); background:var(--azul-100); color:var(--azul-800); box-shadow:0 2px 10px rgba(68,98,86,.2);}
   .autonomia-preview{
     background:var(--verde-bg); color:var(--verde); font-size:13px; font-weight:600;
     padding:10px 12px; border-radius:8px; margin-bottom:14px; display:none;
@@ -463,8 +465,13 @@
 
         <hr class="divisor">
 
-        <button class="abastecimento-toggle" onclick="window.alternarFormAbastecimento()"><span class="tipo-icone">⛽</span>Registrar abastecimento</button>
-        <div id="form-abastecimento">
+        <div class="tabs-motorista">
+          <button type="button" class="tab-motorista" id="tab-motorista-abastecimento" onclick="window.mudarSecaoMotorista('abastecimento')"><span class="tipo-icone">⛽</span>Abastecimento</button>
+          <button type="button" class="tab-motorista" id="tab-motorista-checklist" onclick="window.mudarSecaoMotorista('checklist')"><span class="tipo-icone">📋</span>Checklist</button>
+          <button type="button" class="tab-motorista" id="tab-motorista-oleo" onclick="window.mudarSecaoMotorista('oleo')"><span class="tipo-icone">🛢️</span>Óleo</button>
+        </div>
+
+        <div id="secao-abastecimento" style="display:none; margin-top:14px;">
           <div class="field">
             <label>Cartão utilizado</label>
             <div class="tipo-opcoes" style="grid-template-columns:1fr 1fr;">
@@ -491,14 +498,10 @@
           <button class="btn btn-ambar" style="width:100%;" onclick="window.registrarAbastecimento()">Salvar abastecimento</button>
         </div>
 
-        <hr class="divisor">
-
-        <div class="aviso-card" style="background:var(--vermelho-bg); border-color:var(--vermelho); color:var(--vermelho); font-weight:600;">
-          ⚠️ Caso seja identificada qualquer irregularidade que comprometa a segurança ou a utilização do veículo, comunique imediatamente ao responsável pela frota antes de iniciar o deslocamento.
-        </div>
-
-        <button class="abastecimento-toggle" style="border-color:var(--roxo); background:var(--roxo-bg); color:var(--roxo);" onclick="window.alternarFormChecklist()"><span class="tipo-icone">📋</span>Fazer checklist diário do carro</button>
-        <div id="form-checklist" style="display:none; margin-top:14px;">
+        <div id="secao-checklist" style="display:none; margin-top:14px;">
+          <div class="aviso-card" style="background:var(--vermelho-bg); border-color:var(--vermelho); color:var(--vermelho); font-weight:600;">
+            ⚠️ Caso seja identificada qualquer irregularidade que comprometa a segurança ou a utilização do veículo, comunique imediatamente ao responsável pela frota antes de iniciar o deslocamento.
+          </div>
           <div id="checklist-categorias"></div>
           <div class="field">
             <label>Observações / Irregularidades</label>
@@ -518,10 +521,7 @@
           <button class="btn btn-primario" style="width:100%; margin-top:6px;" onclick="window.enviarChecklist()">Enviar checklist</button>
         </div>
 
-        <hr class="divisor">
-
-        <button class="abastecimento-toggle" style="border-color:var(--azul-600); background:var(--azul-100); color:var(--azul-600);" onclick="window.alternarFormTrocaOleo()"><span class="tipo-icone">🛢️</span>Registrar troca de óleo</button>
-        <div id="form-troca-oleo" style="display:none; margin-top:14px;">
+        <div id="secao-oleo" style="display:none; margin-top:14px;">
           <div class="field">
             <label>KM da troca</label>
             <input type="number" id="input-km-troca-oleo" inputmode="numeric">
@@ -634,7 +634,7 @@
           <div style="overflow-x:auto;">
             <table class="registros">
               <thead>
-                <tr><th>Data</th><th>Horário</th><th>Motorista</th><th>Itens marcados "Não"</th><th></th></tr>
+                <tr><th>Data</th><th>Horário</th><th>Motorista</th><th></th></tr>
               </thead>
               <tbody id="tabela-checklist-body"></tbody>
             </table>
@@ -1058,21 +1058,123 @@
       vazio.style.display = snap.empty ? "block" : "none";
       checklistsCarregados.forEach(c=>{
         const data = c.data?.toDate ? c.data.toDate() : null;
-        const irregularidades = (c.itens || []).filter(i=>i.status === "NAO");
-        const listaIrregularidades = irregularidades.length
-          ? irregularidades.map(d=> d.item).join(" · ")
-          : "Nenhuma";
+        const expandido = checklistsExpandidos.has(c.id);
         const tr = document.createElement("tr");
         tr.innerHTML =
           "<td>" + (data ? data.toLocaleDateString("pt-BR") : "—") + "</td>" +
           "<td>" + (data ? data.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—") + "</td>" +
           "<td>" + (c.motorista || "—") + "</td>" +
-          "<td class=\"paradas-resumo\">" + listaIrregularidades + "</td>" +
-          "<td><button class=\"btn-link\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button></td>";
+          "<td style=\"white-space:nowrap;\">" +
+          "<button class=\"btn-link\" onclick=\"window.alternarEdicaoChecklist('" + c.id + "')\">" + (expandido ? "Fechar" : "Editar") + "</button> " +
+          "<button class=\"btn-link\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button>" +
+          "</td>";
         tbody.appendChild(tr);
+
+        if(expandido){
+          const trExp = document.createElement("tr");
+          const tdExp = document.createElement("td");
+          tdExp.colSpan = 4;
+          tdExp.innerHTML = montarEditorChecklist(c);
+          trExp.appendChild(tdExp);
+          tbody.appendChild(trExp);
+        }
       });
     });
   }
+
+  let checklistsExpandidos = new Set();
+
+  function montarEditorChecklist(checklist){
+    let html = '<div class="paradas-editor" data-checklist-edicao="' + checklist.id + '">';
+    (checklist.itens || []).forEach(it=>{
+      html += '<div class="checklist-item" data-item="' + it.item + '" data-status="' + (it.status||"") + '">'
+        + '<span class="checklist-item-nome">' + it.item + '</span>'
+        + '<div class="checklist-status-btns">'
+        + ["OK","NAO","NA"].map(op=>{
+            const cls = op === "OK" ? "ok" : (op === "NAO" ? "nao" : "na");
+            const rotulo = op === "OK" ? "OK" : (op === "NAO" ? "Não" : "N/A");
+            const sel = it.status === op ? " selecionado" : "";
+            return '<button type="button" class="status-btn ' + cls + sel + '" onclick="window.marcarStatusChecklist(this,\'' + op + '\')">' + rotulo + '</button>';
+          }).join("")
+        + '</div></div>';
+    });
+    html += '<div class="field" style="margin-top:10px;">'
+      + '<label>Observações / Irregularidades</label>'
+      + '<textarea class="upper ce-observacoes" rows="2">' + (checklist.observacoes || "") + '</textarea></div>'
+      + '<div class="field">'
+      + '<label>Providências adotadas</label>'
+      + '<textarea class="upper ce-providencias" rows="2">' + (checklist.providencias || "") + '</textarea></div>'
+      + '<div style="display:flex; gap:8px; margin-top:6px;">'
+      + '<button class="btn btn-sucesso" onclick="window.salvarEdicaoChecklist(\'' + checklist.id + '\')">Salvar</button>'
+      + '<button class="btn btn-fantasma" onclick="window.alternarEdicaoChecklist(\'' + checklist.id + '\')">Cancelar</button>'
+      + '</div></div>';
+    return html;
+  }
+
+  window.alternarEdicaoChecklist = function(id){
+    if(checklistsExpandidos.has(id)) checklistsExpandidos.delete(id);
+    else checklistsExpandidos.add(id);
+    renderizarHistoricoChecklistAgora();
+  };
+
+  function renderizarHistoricoChecklistAgora(){
+    const tbody = document.getElementById("tabela-checklist-body");
+    if(!tbody) return;
+    tbody.innerHTML = "";
+    checklistsCarregados.forEach(c=>{
+      const data = c.data?.toDate ? c.data.toDate() : null;
+      const expandido = checklistsExpandidos.has(c.id);
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + (data ? data.toLocaleDateString("pt-BR") : "—") + "</td>" +
+        "<td>" + (data ? data.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—") + "</td>" +
+        "<td>" + (c.motorista || "—") + "</td>" +
+        "<td style=\"white-space:nowrap;\">" +
+        "<button class=\"btn-link\" onclick=\"window.alternarEdicaoChecklist('" + c.id + "')\">" + (expandido ? "Fechar" : "Editar") + "</button> " +
+        "<button class=\"btn-link\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button>" +
+        "</td>";
+      tbody.appendChild(tr);
+
+      if(expandido){
+        const trExp = document.createElement("tr");
+        const tdExp = document.createElement("td");
+        tdExp.colSpan = 4;
+        tdExp.innerHTML = montarEditorChecklist(c);
+        trExp.appendChild(tdExp);
+        tbody.appendChild(trExp);
+      }
+    });
+  }
+
+  window.salvarEdicaoChecklist = async function(id){
+    const container = document.querySelector('[data-checklist-edicao="' + id + '"]');
+    if(!container) return;
+    const itens = [];
+    let faltando = 0;
+    container.querySelectorAll(".checklist-item").forEach(el=>{
+      const status = el.querySelector(".status-btn.selecionado");
+      const opcao = status
+        ? (status.classList.contains("ok") ? "OK" : (status.classList.contains("nao") ? "NAO" : "NA"))
+        : null;
+      if(!opcao) faltando++;
+      itens.push({ item: el.dataset.item, status: opcao });
+    });
+    if(faltando > 0){
+      toast(faltando + " item(ns) sem marcação.", "erro");
+      return;
+    }
+    const observacoes = container.querySelector(".ce-observacoes").value.trim().toUpperCase();
+    const providencias = container.querySelector(".ce-providencias").value.trim().toUpperCase();
+    try{
+      await updateDoc(doc(db, "checklists", id), { itens, observacoes, providencias });
+      checklistsExpandidos.delete(id);
+      toast("Checklist atualizado.", "sucesso");
+    }catch(e){
+      console.error(e);
+      toast("Erro ao salvar checklist.", "erro");
+    }
+  };
+
 
   function renderizarStatusOleoAdmin(d){
     const el = document.getElementById("status-troca-oleo");
@@ -1244,24 +1346,33 @@
     item.style.borderColor = "";
   };
 
-  window.alternarFormChecklist = function(){
-    const form = document.getElementById("form-checklist");
-    const abrir = form.style.display !== "block";
-    form.style.display = abrir ? "block" : "none";
-    if(abrir && !form.dataset.montado){
-      montarFormChecklist();
-      inicializarCanvasAssinatura();
-      form.dataset.montado = "1";
+  window.mudarSecaoMotorista = function(secao){
+    ["abastecimento","checklist","oleo"].forEach(s=>{
+      const painel = document.getElementById("secao-" + s);
+      const tab = document.getElementById("tab-motorista-" + s);
+      const ativo = s === secao;
+      if(painel) painel.style.display = ativo ? "block" : "none";
+      if(tab) tab.classList.toggle("ativa", ativo);
+    });
+    if(secao === "abastecimento"){
+      document.getElementById("input-km-abastecimento").value = ultimaKmConhecida() ?? (kmAtualVeiculo ?? "");
+      window.selecionarCartao("NORMAL");
+    } else if(secao === "checklist"){
+      const form = document.getElementById("secao-checklist");
+      if(!form.dataset.montado){
+        montarFormChecklist();
+        inicializarCanvasAssinatura();
+        form.dataset.montado = "1";
+      }
+    } else if(secao === "oleo"){
+      document.getElementById("input-km-troca-oleo").value = kmAtualVeiculo ?? "";
     }
   };
 
   window.abrirChecklistDoAviso = function(){
-    const form = document.getElementById("form-checklist");
-    if(form.style.display !== "block"){
-      window.alternarFormChecklist();
-    }
+    window.mudarSecaoMotorista("checklist");
     setTimeout(()=>{
-      form.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.querySelector(".tabs-motorista").scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
   };
 
@@ -1358,7 +1469,6 @@
         providencias,
         assinaturaMotorista
       });
-      document.getElementById("form-checklist").style.display = "none";
       document.getElementById("input-checklist-observacoes").value = "";
       document.getElementById("input-checklist-providencias").value = "";
       window.limparAssinatura();
@@ -1410,15 +1520,6 @@
   }
 
   // ---------- Troca de óleo ----------
-  window.alternarFormTrocaOleo = function(){
-    const form = document.getElementById("form-troca-oleo");
-    const abrir = form.style.display !== "block";
-    form.style.display = abrir ? "block" : "none";
-    if(abrir){
-      document.getElementById("input-km-troca-oleo").value = kmAtualVeiculo ?? "";
-    }
-  };
-
   window.registrarTrocaOleo = async function(){
     const km = Number(document.getElementById("input-km-troca-oleo").value);
     if(!km){ toast("Informe a KM da troca.", "erro"); return; }
@@ -1427,7 +1528,6 @@
         kmUltimaTrocaOleo: km,
         dataUltimaTrocaOleo: serverTimestamp()
       }, { merge: true });
-      document.getElementById("form-troca-oleo").style.display = "none";
       toast("Troca de óleo registrada.", "sucesso");
     }catch(e){
       console.error(e);
@@ -1636,15 +1736,6 @@
     atualizarPreviaAutonomia();
   };
 
-  window.alternarFormAbastecimento = function(){
-    const form = document.getElementById("form-abastecimento");
-    form.style.display = form.style.display === "block" ? "none" : "block";
-    if(form.style.display === "block" && kmAtualVeiculo != null){
-      document.getElementById("input-km-abastecimento").value = ultimaKmConhecida() ?? kmAtualVeiculo;
-      window.selecionarCartao("NORMAL");
-    }
-  };
-
   function atualizarPreviaAutonomia(){
     const km = Number(document.getElementById("input-km-abastecimento").value);
     const litros = Number(document.getElementById("input-litros").value);
@@ -1717,7 +1808,6 @@
       document.getElementById("input-litros").value = "";
       document.getElementById("input-valor-litro").value = "";
       document.getElementById("autonomia-preview").style.display = "none";
-      document.getElementById("form-abastecimento").style.display = "none";
       window.selecionarCartao("NORMAL");
       toast("Abastecimento registrado.", "sucesso");
     }catch(e){
