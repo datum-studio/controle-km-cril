@@ -299,12 +299,12 @@
     .ficha-titulo{text-align:center; font-weight:700; text-decoration:underline; font-size:16.5px; margin-bottom:20px;}
     .ficha-campo{margin-bottom:11px; font-size:16px;}
     .ficha-intro{font-size:15px; margin:16px 0 9px;}
-    .ficha-tabela{width:auto; border-collapse:collapse; font-size:15px; margin-top:4px; line-height:1.3;}
+    .ficha-tabela{width:auto; border-collapse:collapse; font-size:15px; margin-top:4px; line-height:1.15;}
     .ficha-tabela col.col-item{width:78mm;}
     .ficha-tabela col.col-check{width:12mm;}
-    .ficha-tabela th{font-weight:700; text-align:center; padding:5px 3mm; border:none; font-size:15px;}
+    .ficha-tabela th{font-weight:700; text-align:center; padding:2.5px 3mm; border:none; font-size:15px;}
     .ficha-tabela th:first-child{text-align:left; padding-left:0;}
-    .ficha-tabela td{padding:5px 3mm; border:none; font-size:15px;}
+    .ficha-tabela td{padding:2.5px 3mm; border:none; font-size:15px;}
     .ficha-tabela td.item-nome{text-align:left; padding-left:0;}
     .ficha-tabela td.check{text-align:center; font-size:15.5px;}
     .ficha-obs-titulo{font-weight:700; margin:26px 0 10px; font-size:15px; color:#222;}
@@ -622,7 +622,7 @@
 
         <div class="card">
           <h2>Histórico de checklists</h2>
-          <div class="card-sub">Clique em "Imprimir" pra gerar a ficha no padrão FESFSUS, pronta pra colher a assinatura do motorista.</div>
+          <div class="card-sub">Clique em "Baixar" pra gerar o PDF da ficha no padrão FESFSUS (nomeado com a data do checklist), pronta pra colher a assinatura do motorista.</div>
           <div style="overflow-x:auto;">
             <table class="registros">
               <thead>
@@ -1059,7 +1059,7 @@
           "<td>" + (data ? data.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—") + "</td>" +
           "<td>" + (c.motorista || "—") + "</td>" +
           "<td class=\"paradas-resumo\">" + listaIrregularidades + "</td>" +
-          "<td><button class=\"btn-link\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Imprimir</button></td>";
+          "<td><button class=\"btn-link\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button></td>";
         tbody.appendChild(tr);
       });
     });
@@ -1246,6 +1246,16 @@
     }
   };
 
+  window.abrirChecklistDoAviso = function(){
+    const form = document.getElementById("form-checklist");
+    if(form.style.display !== "block"){
+      window.alternarFormChecklist();
+    }
+    setTimeout(()=>{
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
+
   // ---------- Assinatura digital ----------
   let assinaturaCtx = null;
   let assinaturaDpr = 1;
@@ -1358,7 +1368,7 @@
       if(!aviso) return;
       if(snap.empty){
         aviso.innerHTML = '<div class="aviso-card roxo">📋 Ainda não foi feito o checklist de hoje.'
-          + ' <button class="btn-link" onclick="window.alternarFormChecklist()">Fazer agora</button></div>';
+          + ' <button class="btn-link" onclick="window.abrirChecklistDoAviso()">Fazer agora</button></div>';
         aviso.style.display = "block";
       } else {
         aviso.style.display = "none";
@@ -2251,7 +2261,7 @@
       '<div class="ficha-linha-preenchida">' + (c.providencias || "&nbsp;") + '</div>' +
       '<div class="ficha-linha-preenchida">&nbsp;</div>' +
       blocoAssinatura +
-      '<div class="ficha-assinatura" style="margin-top:14px;">Data: <span class="ficha-linha-assinatura-fesfsus" style="width:120px;"></span></div>' +
+      '<div class="ficha-assinatura" style="margin-top:14px;">Data: ' + dataFormatada + '</div>' +
       '<div class="ficha-observacao-final"><b>Observação:</b> Caso seja identificada qualquer irregularidade que comprometa a segurança ou a utilização do veículo, o motorista deverá comunicar imediatamente ao responsável pela frota antes de iniciar o deslocamento.</div>' +
       '</div>' +
       '<div class="ficha-rodape-fesfsus"><img src="' + LOGO_FESFSUS_FOOTER + '" alt="FESFSUS"></div>';
