@@ -439,7 +439,7 @@
                 <input type="text" id="input-nome-usuario" class="upper" placeholder="NOME DE QUEM VAI USAR O CARRO">
               </div>
             </div>
-            <button class="btn btn-primario" onclick="window.iniciarViagem()">Iniciar viagem</button>
+            <button class="btn btn-primario" onclick="window.iniciarViagem(this)">Iniciar viagem</button>
           </div>
         </div>
 
@@ -450,7 +450,7 @@
             <div class="linha"><span>Início</span><b id="fv-inicio">—</b></div>
             <div class="linha"><span>KM inicial</span><b id="fv-km-inicial" class="mono">—</b></div>
           </div>
-          <button class="btn btn-fantasma" style="width:100%; margin-bottom:14px; color:var(--vermelho); border-color:var(--vermelho);" onclick="window.cancelarViagem()">Cancelar viagem</button>
+          <button class="btn btn-fantasma" style="width:100%; margin-bottom:14px; color:var(--vermelho); border-color:var(--vermelho);" onclick="window.cancelarViagem(this)">Cancelar viagem</button>
 
           <h2 style="font-size:14px; margin-top:4px;">Paradas registradas</h2>
           <div class="paradas-lista" id="paradas-lista">
@@ -473,7 +473,7 @@
             <label>Horário desta parada</label>
             <input type="datetime-local" id="input-parada-hora">
           </div>
-          <button class="btn btn-secundario" style="width:100%; margin-bottom:12px;" onclick="window.registrarParada()">Registrar parada</button>
+          <button class="btn btn-secundario" style="width:100%; margin-bottom:12px;" onclick="window.registrarParada(this)">Registrar parada</button>
 
           <div id="finalizar-com-cril">
             <div id="bloco-retorno-cril" style="display:none; margin-bottom:12px;">
@@ -481,16 +481,16 @@
                 <label>KM ao chegar na CRIL</label>
                 <input type="number" id="input-km-cril" placeholder="Ex.: 45210" inputmode="numeric">
               </div>
-              <button class="btn btn-sucesso" style="width:100%; margin-bottom:8px;" onclick="window.confirmarRetornoCril()">Confirmar chegada na CRIL e finalizar</button>
+              <button class="btn btn-sucesso" style="width:100%; margin-bottom:8px;" onclick="window.confirmarRetornoCril(this)">Confirmar chegada na CRIL e finalizar</button>
               <button type="button" class="btn btn-fantasma" style="width:100%;" onclick="window.cancelarBlocoRetornoCril()">Cancelar</button>
             </div>
             <div id="opcoes-finalizar-viagem">
               <button class="btn btn-sucesso" style="width:100%; margin-bottom:8px;" onclick="window.alternarBlocoRetornoCril()">Cheguei na CRIL</button>
-              <button class="btn btn-fantasma" style="width:100%;" onclick="window.finalizarSemRetorno()">Finalizar sem retornar à CRIL</button>
+              <button class="btn btn-fantasma" style="width:100%;" onclick="window.finalizarSemRetorno(this)">Finalizar sem retornar à CRIL</button>
             </div>
           </div>
 
-          <button class="btn btn-sucesso" style="width:100%; display:none;" id="btn-finalizar-viagem-simples" onclick="window.finalizarViagem()">Finalizar viagem</button>
+          <button class="btn btn-sucesso" style="width:100%; display:none;" id="btn-finalizar-viagem-simples" onclick="window.finalizarViagem(this)">Finalizar viagem</button>
         </div>
 
         <hr class="divisor">
@@ -525,7 +525,7 @@
             </div>
           </div>
           <div class="autonomia-preview" id="autonomia-preview"></div>
-          <button class="btn btn-ambar" style="width:100%;" onclick="window.registrarAbastecimento()">Salvar abastecimento</button>
+          <button class="btn btn-ambar" style="width:100%;" onclick="window.registrarAbastecimento(this)">Salvar abastecimento</button>
         </div>
 
         <div id="secao-checklist" style="display:none; margin-top:14px;">
@@ -548,7 +548,7 @@
             </div>
             <button type="button" class="btn-link" onclick="window.limparAssinatura()">Limpar assinatura</button>
           </div>
-          <button class="btn btn-primario" style="width:100%; margin-top:6px;" onclick="window.enviarChecklist()">Enviar checklist</button>
+          <button class="btn btn-primario" style="width:100%; margin-top:6px;" onclick="window.enviarChecklist(this)">Enviar checklist</button>
         </div>
 
         <div id="secao-oleo" style="display:none; margin-top:14px;">
@@ -556,7 +556,7 @@
             <label>KM da troca</label>
             <input type="number" id="input-km-troca-oleo" inputmode="numeric">
           </div>
-          <button class="btn btn-secundario" style="width:100%;" onclick="window.registrarTrocaOleo()">Salvar troca de óleo</button>
+          <button class="btn btn-secundario" style="width:100%;" onclick="window.registrarTrocaOleo(this)">Salvar troca de óleo</button>
         </div>
       </div>
     </div>
@@ -921,6 +921,21 @@
     el.textContent = msg;
     el.className = "toast mostrar " + tipo;
     setTimeout(()=> el.classList.remove("mostrar"), 3000);
+  }
+
+  function travarBotao(botao){
+    if(!botao || botao.disabled) return null;
+    const textoOriginal = botao.innerHTML;
+    botao.disabled = true;
+    botao.style.opacity = "0.6";
+    botao.innerHTML = "Salvando...";
+    return textoOriginal;
+  }
+  function destravarBotao(botao, textoOriginal){
+    if(!botao) return;
+    botao.disabled = false;
+    botao.style.opacity = "";
+    if(textoOriginal != null) botao.innerHTML = textoOriginal;
   }
 
   function formatarMoeda(v){
@@ -1491,7 +1506,7 @@
     assinaturaTemConteudo = false;
   };
 
-  window.enviarChecklist = async function(){
+  window.enviarChecklist = async function(botao){
     const itens = [];
     let itensNaoMarcados = 0;
     document.querySelectorAll("#checklist-categorias .checklist-item").forEach(el=>{
@@ -1518,6 +1533,7 @@
     const observacoes = document.getElementById("input-checklist-observacoes").value.trim().toUpperCase();
     const providencias = document.getElementById("input-checklist-providencias").value.trim().toUpperCase();
 
+    const textoOriginal = travarBotao(botao);
     try{
       await addDoc(collection(db, "checklists"), {
         dataStr: hojeStr(),
@@ -1537,6 +1553,8 @@
     }catch(e){
       console.error(e);
       toast("Erro ao enviar checklist.", "erro");
+    } finally {
+      destravarBotao(botao, textoOriginal);
     }
   };
 
@@ -1581,9 +1599,10 @@
   }
 
   // ---------- Troca de óleo ----------
-  window.registrarTrocaOleo = async function(){
+  window.registrarTrocaOleo = async function(botao){
     const km = Number(document.getElementById("input-km-troca-oleo").value);
     if(!km){ toast("Informe a KM da troca.", "erro"); return; }
+    const textoOriginal = travarBotao(botao);
     try{
       await setDoc(doc(db, "veiculos", VEICULO_ID), {
         kmUltimaTrocaOleo: km,
@@ -1594,6 +1613,8 @@
     }catch(e){
       console.error(e);
       toast("Erro ao registrar troca de óleo.", "erro");
+    } finally {
+      destravarBotao(botao, textoOriginal);
     }
   };
 
@@ -1654,7 +1675,7 @@
     document.getElementById("etapa-escolher-tipo").style.display = "block";
   };
 
-  window.iniciarViagem = async function(){
+  window.iniciarViagem = async function(botao){
     if(!tipoSelecionado){ toast("Escolha o tipo de deslocamento.", "erro"); return; }
     const nomeUsuario = tipoSelecionado === "outro" ? "" : obterNomeUsuarioSelecionado();
     if(tipoSelecionado !== "outro" && !nomeUsuario){ toast("Informe o nome do usuário do veículo.", "erro"); return; }
@@ -1662,8 +1683,10 @@
     if(tipoSelecionado === "viagem" && !destino){ toast("Informe o destino (município) da viagem.", "erro"); return; }
     if(kmAtualVeiculo == null){ toast("KM do veículo ainda não carregada, aguarde.", "erro"); return; }
 
+    const textoOriginal = travarBotao(botao);
     try{
-      await addDoc(collection(db, "registros"), {
+      const agora = new Date();
+      const dadosViagem = {
         status: "aberto",
         tipo: tipoSelecionado,
         nomeUsuario,
@@ -1677,7 +1700,8 @@
         registradoPor: nomeMotoristaLogado || auth.currentUser.email,
         editadoPor: null,
         editadoEm: null
-      });
+      };
+      const ref = await addDoc(collection(db, "registros"), dadosViagem);
       tipoSelecionado = null;
       document.querySelectorAll(".tipo-btn").forEach(b=>b.classList.remove("selecionado"));
       const selUsuario = document.getElementById("select-nome-usuario");
@@ -1692,13 +1716,18 @@
       document.getElementById("campo-destino-texto").style.display = "none";
       document.getElementById("grupo-destino-viagem").style.display = "none";
       toast("Viagem iniciada.", "sucesso");
+      // Atualização otimista: muda a tela na hora, sem esperar confirmação do servidor
+      viagemAberta = { id: ref.id, ...dadosViagem, horaInicial: Timestamp.fromDate(agora) };
+      mostrarBlocoFinalizar();
     }catch(e){
       console.error(e);
       toast("Erro ao iniciar viagem.", "erro");
+    } finally {
+      destravarBotao(botao, textoOriginal);
     }
   };
 
-  window.registrarParada = async function(){
+  window.registrarParada = async function(botao){
     const local = obterLocalParada();
     const km = Number(document.getElementById("input-parada-km").value);
     const horaInput = document.getElementById("input-parada-hora").value;
@@ -1715,6 +1744,7 @@
       return;
     }
     const hora = new Date(horaInput);
+    const textoOriginal = travarBotao(botao);
     try{
       await updateDoc(doc(db, "registros", viagemAberta.id), {
         paradas: arrayUnion({ local, km, hora })
@@ -1726,9 +1756,13 @@
         document.getElementById("campo-local-texto").style.display = "none";
       }
       toast("Parada registrada.", "sucesso");
+      viagemAberta.paradas = [...(viagemAberta.paradas || []), { local, km, hora: Timestamp.fromDate(hora) }];
+      mostrarBlocoFinalizar();
     }catch(e){
       console.error(e);
       toast("Erro ao registrar parada.", "erro");
+    } finally {
+      destravarBotao(botao, textoOriginal);
     }
   };
 
@@ -1743,7 +1777,7 @@
     document.getElementById("opcoes-finalizar-viagem").style.display = "block";
   };
 
-  window.confirmarRetornoCril = async function(){
+  window.confirmarRetornoCril = async function(botao){
     const km = Number(document.getElementById("input-km-cril").value);
     if(!km){ toast("Informe a KM ao chegar na CRIL.", "erro"); return; }
     const ultimaKm = ultimaKmConhecida();
@@ -1755,6 +1789,7 @@
       toast("KM igual à última parada (" + ultimaKm.toLocaleString("pt-BR") + "). Confira o valor no painel antes de confirmar a chegada.", "erro");
       return;
     }
+    const textoOriginal = travarBotao(botao);
     try{
       await updateDoc(doc(db, "registros", viagemAberta.id), {
         paradas: arrayUnion({ local: "CRIL", km, hora: new Date() })
@@ -1763,42 +1798,59 @@
     }catch(e){
       console.error(e);
       toast("Erro ao confirmar chegada na CRIL.", "erro");
+    } finally {
+      destravarBotao(botao, textoOriginal);
     }
   };
 
-  window.finalizarSemRetorno = function(){
+  window.finalizarSemRetorno = async function(botao){
     const paradas = viagemAberta.paradas || [];
     if(!paradas.length){
       toast("Registre ao menos uma parada antes de finalizar.", "erro");
       return;
     }
     if(!confirm("Tem certeza que deseja finalizar sem retornar à CRIL?")) return;
-    finalizarComKm(paradas[paradas.length - 1].km);
+    const textoOriginal = travarBotao(botao);
+    try{
+      await finalizarComKm(paradas[paradas.length - 1].km);
+    } finally {
+      destravarBotao(botao, textoOriginal);
+    }
   };
 
-  window.cancelarViagem = async function(){
+  window.cancelarViagem = async function(botao){
     if(!viagemAberta) return;
     const paradasExistentes = (viagemAberta.paradas || []).length;
     const aviso = paradasExistentes
       ? "Essa viagem já tem " + paradasExistentes + " parada(s) registrada(s). Cancelar mesmo assim vai apagar tudo. Tem certeza?"
       : "Cancelar essa viagem? Ela será apagada e a KM do carro não muda.";
     if(!confirm(aviso)) return;
+    const textoOriginal = travarBotao(botao);
     try{
       await deleteDoc(doc(db, "registros", viagemAberta.id));
       toast("Viagem cancelada.", "sucesso");
+      viagemAberta = null;
+      mostrarBlocoIniciar();
     }catch(e){
       console.error(e);
       toast("Erro ao cancelar viagem.", "erro");
+    } finally {
+      destravarBotao(botao, textoOriginal);
     }
   };
 
-  window.finalizarViagem = function(){
+  window.finalizarViagem = async function(botao){
     const paradas = viagemAberta.paradas || [];
     if(!paradas.length){
       toast("Registre ao menos uma parada antes de finalizar.", "erro");
       return;
     }
-    finalizarComKm(paradas[paradas.length - 1].km);
+    const textoOriginal = travarBotao(botao);
+    try{
+      await finalizarComKm(paradas[paradas.length - 1].km);
+    } finally {
+      destravarBotao(botao, textoOriginal);
+    }
   };
 
   async function finalizarComKm(kmFinal){
@@ -1811,6 +1863,9 @@
       });
       await setDoc(doc(db, "veiculos", VEICULO_ID), { kmAtual: kmFinal }, { merge: true });
       toast("Viagem finalizada.", "sucesso");
+      kmAtualVeiculo = kmFinal;
+      viagemAberta = null;
+      mostrarBlocoIniciar();
     }catch(e){
       console.error(e);
       toast("Erro ao finalizar viagem.", "erro");
@@ -1864,7 +1919,7 @@
     document.getElementById(id).addEventListener("input", atualizarPreviaAutonomia);
   });
 
-  window.registrarAbastecimento = async function(){
+  window.registrarAbastecimento = async function(botao){
     const km = Number(document.getElementById("input-km-abastecimento").value);
     const litros = Number(document.getElementById("input-litros").value);
     const valorLitro = Number(document.getElementById("input-valor-litro").value);
@@ -1881,6 +1936,7 @@
       autonomia = kmRodadoDesdeUltimo / litros;
     }
 
+    const textoOriginal = travarBotao(botao);
     try{
       await addDoc(collection(db, "abastecimentos"), {
         data: serverTimestamp(),
@@ -1900,11 +1956,15 @@
       document.getElementById("input-valor-litro").value = "";
       document.getElementById("autonomia-preview").style.display = "none";
       window.selecionarCartao("NORMAL");
+      kmAtualVeiculo = novoKmAtual;
+      kmUltimoAbastecimento = km;
       toast("Abastecimento registrado.", "sucesso");
       fecharSecoesMotorista();
     }catch(e){
       console.error(e);
       toast("Erro ao registrar abastecimento.", "erro");
+    } finally {
+      destravarBotao(botao, textoOriginal);
     }
   };
 
