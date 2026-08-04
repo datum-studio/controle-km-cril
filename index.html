@@ -406,35 +406,41 @@
         </div>
 
         <div id="bloco-iniciar">
-          <div class="field">
-            <label>Tipo de deslocamento</label>
-            <div class="tipo-opcoes">
-              <button class="tipo-btn" data-tipo="visita_hospitalar" onclick="window.selecionarTipo('visita_hospitalar')"><span class="tipo-icone">🏥</span>Visita hospitalar</button>
-              <button class="tipo-btn" data-tipo="viagem" onclick="window.selecionarTipo('viagem')"><span class="tipo-icone">🧳</span>Viagem</button>
-              <button class="tipo-btn" data-tipo="outro" onclick="window.selecionarTipo('outro')"><span class="tipo-icone">📋</span>Outro</button>
-            </div>
-          </div>
-          <div id="grupo-destino-viagem" style="display:none;">
+          <div id="etapa-escolher-tipo">
             <div class="field">
-              <label>Destino (município)</label>
-              <select id="select-destino-viagem" onchange="window.alternarDestinoOutro()"></select>
-            </div>
-            <div class="field" id="campo-destino-texto" style="display:none;">
-              <label>Digite o município</label>
-              <input type="text" id="input-destino-viagem" class="upper" placeholder="MUNICÍPIO DE DESTINO">
-            </div>
-          </div>
-          <div id="grupo-nome-usuario" style="display:none;">
-            <div class="field">
-              <label id="label-nome-usuario">Nome do usuário do veículo</label>
-              <select id="select-nome-usuario" onchange="window.alternarUsuarioOutro()"></select>
-            </div>
-            <div class="field" id="campo-usuario-texto" style="display:none;">
-              <label id="label-usuario-texto">Digite o nome</label>
-              <input type="text" id="input-nome-usuario" class="upper" placeholder="NOME DE QUEM VAI USAR O CARRO">
+              <label>Tipo de deslocamento</label>
+              <div class="tipo-opcoes">
+                <button class="tipo-btn" data-tipo="visita_hospitalar" onclick="window.selecionarTipo('visita_hospitalar')"><span class="tipo-icone">🏥</span>Visita hospitalar</button>
+                <button class="tipo-btn" data-tipo="viagem" onclick="window.selecionarTipo('viagem')"><span class="tipo-icone">🧳</span>Viagem</button>
+                <button class="tipo-btn" data-tipo="outro" onclick="window.selecionarTipo('outro')"><span class="tipo-icone">📋</span>Outro</button>
+              </div>
             </div>
           </div>
-          <button class="btn btn-primario" onclick="window.iniciarViagem()">Iniciar viagem</button>
+
+          <div id="etapa-detalhes-viagem" style="display:none;">
+            <button type="button" class="btn-link" style="margin-bottom:14px;" onclick="window.voltarEscolhaTipo()">← Voltar e escolher outro tipo</button>
+            <div id="grupo-destino-viagem" style="display:none;">
+              <div class="field">
+                <label>Destino (município)</label>
+                <select id="select-destino-viagem" onchange="window.alternarDestinoOutro()"></select>
+              </div>
+              <div class="field" id="campo-destino-texto" style="display:none;">
+                <label>Digite o município</label>
+                <input type="text" id="input-destino-viagem" class="upper" placeholder="MUNICÍPIO DE DESTINO">
+              </div>
+            </div>
+            <div id="grupo-nome-usuario" style="display:none;">
+              <div class="field">
+                <label id="label-nome-usuario">Nome do usuário do veículo</label>
+                <select id="select-nome-usuario" onchange="window.alternarUsuarioOutro()"></select>
+              </div>
+              <div class="field" id="campo-usuario-texto" style="display:none;">
+                <label id="label-usuario-texto">Digite o nome</label>
+                <input type="text" id="input-nome-usuario" class="upper" placeholder="NOME DE QUEM VAI USAR O CARRO">
+              </div>
+            </div>
+            <button class="btn btn-primario" onclick="window.iniciarViagem()">Iniciar viagem</button>
+          </div>
         </div>
 
         <div id="bloco-finalizar" style="display:none;">
@@ -444,7 +450,7 @@
             <div class="linha"><span>Início</span><b id="fv-inicio">—</b></div>
             <div class="linha"><span>KM inicial</span><b id="fv-km-inicial" class="mono">—</b></div>
           </div>
-          <button class="btn btn-fantasma" style="width:100%; margin-bottom:14px; color:var(--vermelho); border-color:var(--vermelho);" onclick="window.cancelarViagem()">Cancelar esta viagem (iniciei sem querer)</button>
+          <button class="btn btn-fantasma" style="width:100%; margin-bottom:14px; color:var(--vermelho); border-color:var(--vermelho);" onclick="window.cancelarViagem()">Cancelar viagem</button>
 
           <h2 style="font-size:14px; margin-top:4px;">Paradas registradas</h2>
           <div class="paradas-lista" id="paradas-lista">
@@ -475,10 +481,13 @@
                 <label>KM ao chegar na CRIL</label>
                 <input type="number" id="input-km-cril" placeholder="Ex.: 45210" inputmode="numeric">
               </div>
-              <button class="btn btn-sucesso" style="width:100%;" onclick="window.confirmarRetornoCril()">Confirmar chegada na CRIL e finalizar</button>
+              <button class="btn btn-sucesso" style="width:100%; margin-bottom:8px;" onclick="window.confirmarRetornoCril()">Confirmar chegada na CRIL e finalizar</button>
+              <button type="button" class="btn btn-fantasma" style="width:100%;" onclick="window.cancelarBlocoRetornoCril()">Cancelar</button>
             </div>
-            <button class="btn btn-sucesso" style="width:100%; margin-bottom:8px;" onclick="window.alternarBlocoRetornoCril()">Cheguei na CRIL</button>
-            <button class="btn btn-fantasma" style="width:100%;" onclick="window.finalizarSemRetorno()">Finalizar sem retornar à CRIL</button>
+            <div id="opcoes-finalizar-viagem">
+              <button class="btn btn-sucesso" style="width:100%; margin-bottom:8px;" onclick="window.alternarBlocoRetornoCril()">Cheguei na CRIL</button>
+              <button class="btn btn-fantasma" style="width:100%;" onclick="window.finalizarSemRetorno()">Finalizar sem retornar à CRIL</button>
+            </div>
           </div>
 
           <button class="btn btn-sucesso" style="width:100%; display:none;" id="btn-finalizar-viagem-simples" onclick="window.finalizarViagem()">Finalizar viagem</button>
@@ -1304,6 +1313,9 @@
     document.getElementById("bloco-finalizar").style.display = "none";
     document.getElementById("status-badge").className = "status-badge livre";
     document.getElementById("status-badge").innerHTML = '<span class="status-dot"></span>Veículo livre';
+    if(document.getElementById("etapa-detalhes-viagem").style.display === "block" && !tipoSelecionado){
+      window.voltarEscolhaTipo();
+    }
   }
 
   function mostrarBlocoFinalizar(){
@@ -1604,6 +1616,8 @@
     document.querySelectorAll(".tipo-btn").forEach(b=>{
       b.classList.toggle("selecionado", b.dataset.tipo === tipo);
     });
+    document.getElementById("etapa-escolher-tipo").style.display = "none";
+    document.getElementById("etapa-detalhes-viagem").style.display = "block";
     document.getElementById("grupo-nome-usuario").style.display = tipo === "outro" ? "none" : "block";
     document.getElementById("grupo-destino-viagem").style.display = tipo === "viagem" ? "block" : "none";
     if(tipo !== "viagem"){
@@ -1628,7 +1642,16 @@
       document.getElementById("campo-usuario-texto").style.display = "block";
     }
     document.getElementById("input-nome-usuario").value = "";
-    document.getElementById("campo-usuario-texto").style.display = "none";
+    if(tipo !== "viagem"){
+      document.getElementById("campo-usuario-texto").style.display = "none";
+    }
+  };
+
+  window.voltarEscolhaTipo = function(){
+    tipoSelecionado = null;
+    document.querySelectorAll(".tipo-btn").forEach(b=>b.classList.remove("selecionado"));
+    document.getElementById("etapa-detalhes-viagem").style.display = "none";
+    document.getElementById("etapa-escolher-tipo").style.display = "block";
   };
 
   window.iniciarViagem = async function(){
@@ -1710,12 +1733,14 @@
   };
 
   window.alternarBlocoRetornoCril = function(){
-    const bloco = document.getElementById("bloco-retorno-cril");
-    const mostrando = bloco.style.display === "block";
-    bloco.style.display = mostrando ? "none" : "block";
-    if(!mostrando){
-      document.getElementById("input-km-cril").value = ultimaKmConhecida() ?? "";
-    }
+    document.getElementById("opcoes-finalizar-viagem").style.display = "none";
+    document.getElementById("bloco-retorno-cril").style.display = "block";
+    document.getElementById("input-km-cril").value = ultimaKmConhecida() ?? "";
+  };
+
+  window.cancelarBlocoRetornoCril = function(){
+    document.getElementById("bloco-retorno-cril").style.display = "none";
+    document.getElementById("opcoes-finalizar-viagem").style.display = "block";
   };
 
   window.confirmarRetornoCril = async function(){
