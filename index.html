@@ -1538,7 +1538,7 @@
     assinaturaTemConteudo = false;
   };
 
-  window.enviarChecklist = async function(botao){
+  window.enviarChecklist = function(botao){
     const itens = [];
     let itensNaoMarcados = 0;
     document.querySelectorAll("#checklist-categorias .checklist-item").forEach(el=>{
@@ -1566,28 +1566,22 @@
     const providencias = document.getElementById("input-checklist-providencias").value.trim().toUpperCase();
 
     const textoOriginal = travarBotao(botao);
-    try{
-      await addDoc(collection(db, "checklists"), {
-        dataStr: hojeStr(),
-        data: serverTimestamp(),
-        motorista: nomeMotoristaLogado || auth.currentUser.email,
-        registradoPor: nomeMotoristaLogado || auth.currentUser.email,
-        itens,
-        observacoes,
-        providencias,
-        assinaturaMotorista
-      });
-      document.getElementById("input-checklist-observacoes").value = "";
-      document.getElementById("input-checklist-providencias").value = "";
-      window.limparAssinatura();
-      toast("Checklist enviado.", "sucesso");
-      fecharSecoesMotorista();
-    }catch(e){
-      console.error(e);
-      toast("Erro ao enviar checklist.", "erro");
-    } finally {
-      destravarBotao(botao, textoOriginal);
-    }
+    addDoc(collection(db, "checklists"), {
+      dataStr: hojeStr(),
+      data: serverTimestamp(),
+      motorista: nomeMotoristaLogado || auth.currentUser.email,
+      registradoPor: nomeMotoristaLogado || auth.currentUser.email,
+      itens,
+      observacoes,
+      providencias,
+      assinaturaMotorista
+    }).catch(e=> console.error("Erro ao gravar checklist (será sincronizado depois se offline):", e));
+    document.getElementById("input-checklist-observacoes").value = "";
+    document.getElementById("input-checklist-providencias").value = "";
+    window.limparAssinatura();
+    toast("Checklist enviado.", "sucesso");
+    fecharSecoesMotorista();
+    destravarBotao(botao, textoOriginal);
   };
 
   function verificarChecklistDaSemana(){
@@ -1631,23 +1625,17 @@
   }
 
   // ---------- Troca de óleo ----------
-  window.registrarTrocaOleo = async function(botao){
+  window.registrarTrocaOleo = function(botao){
     const km = Number(document.getElementById("input-km-troca-oleo").value);
     if(!km){ toast("Informe a KM da troca.", "erro"); return; }
     const textoOriginal = travarBotao(botao);
-    try{
-      await setDoc(doc(db, "veiculos", VEICULO_ID), {
-        kmUltimaTrocaOleo: km,
-        dataUltimaTrocaOleo: serverTimestamp()
-      }, { merge: true });
-      toast("Troca de óleo registrada.", "sucesso");
-      fecharSecoesMotorista();
-    }catch(e){
-      console.error(e);
-      toast("Erro ao registrar troca de óleo.", "erro");
-    } finally {
-      destravarBotao(botao, textoOriginal);
-    }
+    setDoc(doc(db, "veiculos", VEICULO_ID), {
+      kmUltimaTrocaOleo: km,
+      dataUltimaTrocaOleo: serverTimestamp()
+    }, { merge: true }).catch(e=> console.error("Erro ao gravar troca de óleo (será sincronizado depois se offline):", e));
+    toast("Troca de óleo registrada.", "sucesso");
+    fecharSecoesMotorista();
+    destravarBotao(botao, textoOriginal);
   };
 
   function calcularStatusOleo(d){
@@ -1707,7 +1695,7 @@
     document.getElementById("etapa-escolher-tipo").style.display = "block";
   };
 
-  window.iniciarViagem = async function(botao){
+  window.iniciarViagem = function(botao){
     if(!tipoSelecionado){ toast("Escolha o tipo de deslocamento.", "erro"); return; }
     const nomeUsuario = tipoSelecionado === "outro" ? "" : obterNomeUsuarioSelecionado();
     if(tipoSelecionado !== "outro" && !nomeUsuario){ toast("Informe o nome do usuário do veículo.", "erro"); return; }
@@ -1716,50 +1704,45 @@
     if(kmAtualVeiculo == null){ toast("KM do veículo ainda não carregada, aguarde.", "erro"); return; }
 
     const textoOriginal = travarBotao(botao);
-    try{
-      const agora = new Date();
-      const dadosViagem = {
-        status: "aberto",
-        tipo: tipoSelecionado,
-        nomeUsuario,
-        destino,
-        paradas: [],
-        kmInicial: kmAtualVeiculo,
-        kmFinal: null,
-        kmRodado: null,
-        horaInicial: serverTimestamp(),
-        horaFinal: null,
-        registradoPor: nomeMotoristaLogado || auth.currentUser.email,
-        editadoPor: null,
-        editadoEm: null
-      };
-      const ref = await addDoc(collection(db, "registros"), dadosViagem);
-      tipoSelecionado = null;
-      document.querySelectorAll(".tipo-btn").forEach(b=>b.classList.remove("selecionado"));
-      const selUsuario = document.getElementById("select-nome-usuario");
-      Array.from(selUsuario.options).forEach(o=> o.selected = false);
-      selUsuario.multiple = false;
-      selUsuario.removeAttribute("size");
-      document.getElementById("input-nome-usuario").value = "";
-      document.getElementById("campo-usuario-texto").style.display = "none";
-      document.getElementById("grupo-nome-usuario").style.display = "block";
-      document.getElementById("select-destino-viagem").value = "";
-      document.getElementById("input-destino-viagem").value = "";
-      document.getElementById("campo-destino-texto").style.display = "none";
-      document.getElementById("grupo-destino-viagem").style.display = "none";
-      toast("Viagem iniciada.", "sucesso");
-      // Atualização otimista: muda a tela na hora, sem esperar confirmação do servidor
-      viagemAberta = { id: ref.id, ...dadosViagem, horaInicial: Timestamp.fromDate(agora) };
-      mostrarBlocoFinalizar();
-    }catch(e){
-      console.error(e);
-      toast("Erro ao iniciar viagem.", "erro");
-    } finally {
-      destravarBotao(botao, textoOriginal);
-    }
+    const agora = new Date();
+    const dadosViagem = {
+      status: "aberto",
+      tipo: tipoSelecionado,
+      nomeUsuario,
+      destino,
+      paradas: [],
+      kmInicial: kmAtualVeiculo,
+      kmFinal: null,
+      kmRodado: null,
+      horaInicial: serverTimestamp(),
+      horaFinal: null,
+      registradoPor: nomeMotoristaLogado || auth.currentUser.email,
+      editadoPor: null,
+      editadoEm: null
+    };
+    const ref = doc(collection(db, "registros"));
+    setDoc(ref, dadosViagem).catch(e=> console.error("Erro ao gravar viagem (será sincronizado depois se offline):", e));
+    tipoSelecionado = null;
+    document.querySelectorAll(".tipo-btn").forEach(b=>b.classList.remove("selecionado"));
+    const selUsuario = document.getElementById("select-nome-usuario");
+    Array.from(selUsuario.options).forEach(o=> o.selected = false);
+    selUsuario.multiple = false;
+    selUsuario.removeAttribute("size");
+    document.getElementById("input-nome-usuario").value = "";
+    document.getElementById("campo-usuario-texto").style.display = "none";
+    document.getElementById("grupo-nome-usuario").style.display = "block";
+    document.getElementById("select-destino-viagem").value = "";
+    document.getElementById("input-destino-viagem").value = "";
+    document.getElementById("campo-destino-texto").style.display = "none";
+    document.getElementById("grupo-destino-viagem").style.display = "none";
+    toast("Viagem iniciada.", "sucesso");
+    // Atualização otimista: muda a tela na hora, sem esperar confirmação do servidor
+    viagemAberta = { id: ref.id, ...dadosViagem, horaInicial: Timestamp.fromDate(agora) };
+    mostrarBlocoFinalizar();
+    destravarBotao(botao, textoOriginal);
   };
 
-  window.registrarParada = async function(botao){
+  window.registrarParada = function(botao){
     const local = obterLocalParada();
     const km = Number(document.getElementById("input-parada-km").value);
     const horaInput = document.getElementById("input-parada-hora").value;
@@ -1778,25 +1761,19 @@
     const hora = new Date(horaInput);
     if(viagemOcupada){ toast("Aguarde a operação anterior terminar.", "erro"); return; }
     const textoOriginal = travarViagem(botao);
-    try{
-      await updateDoc(doc(db, "registros", viagemAberta.id), {
-        paradas: arrayUnion({ local, km, hora })
-      });
-      document.getElementById("input-parada-local").value = "";
-      document.getElementById("select-parada-hospital").value = "";
-      document.getElementById("input-parada-hora").value = dataHoraLocalAgora();
-      if(viagemAberta.tipo === "visita_hospitalar"){
-        document.getElementById("campo-local-texto").style.display = "none";
-      }
-      toast("Parada registrada.", "sucesso");
-      viagemAberta.paradas = [...(viagemAberta.paradas || []), { local, km, hora: Timestamp.fromDate(hora) }];
-      mostrarBlocoFinalizar();
-    }catch(e){
-      console.error(e);
-      toast("Erro ao registrar parada.", "erro");
-    } finally {
-      destravarViagem(botao, textoOriginal);
+    updateDoc(doc(db, "registros", viagemAberta.id), {
+      paradas: arrayUnion({ local, km, hora })
+    }).catch(e=> console.error("Erro ao gravar parada (será sincronizado depois se offline):", e));
+    document.getElementById("input-parada-local").value = "";
+    document.getElementById("select-parada-hospital").value = "";
+    document.getElementById("input-parada-hora").value = dataHoraLocalAgora();
+    if(viagemAberta.tipo === "visita_hospitalar"){
+      document.getElementById("campo-local-texto").style.display = "none";
     }
+    toast("Parada registrada.", "sucesso");
+    viagemAberta.paradas = [...(viagemAberta.paradas || []), { local, km, hora: Timestamp.fromDate(hora) }];
+    mostrarBlocoFinalizar();
+    destravarViagem(botao, textoOriginal);
   };
 
   window.alternarBlocoRetornoCril = function(){
@@ -1810,7 +1787,7 @@
     document.getElementById("opcoes-finalizar-viagem").style.display = "block";
   };
 
-  window.confirmarRetornoCril = async function(botao){
+  window.confirmarRetornoCril = function(botao){
     const km = Number(document.getElementById("input-km-cril").value);
     if(!km){ toast("Informe a KM ao chegar na CRIL.", "erro"); return; }
     const ultimaKm = ultimaKmConhecida();
@@ -1824,20 +1801,13 @@
     }
     if(viagemOcupada){ toast("Aguarde a operação anterior terminar.", "erro"); return; }
     const textoOriginal = travarViagem(botao);
-    try{
-      await updateDoc(doc(db, "registros", viagemAberta.id), {
-        paradas: arrayUnion({ local: "CRIL", km, hora: new Date() })
-      });
-      await finalizarComKm(km);
-    }catch(e){
-      console.error(e);
-      toast("Erro ao confirmar chegada na CRIL.", "erro");
-    } finally {
-      destravarViagem(botao, textoOriginal);
-    }
+    updateDoc(doc(db, "registros", viagemAberta.id), {
+      paradas: arrayUnion({ local: "CRIL", km, hora: new Date() })
+    }).catch(e=> console.error("Erro ao gravar chegada na CRIL (será sincronizado depois se offline):", e));
+    finalizarComKm(km, botao, textoOriginal);
   };
 
-  window.finalizarSemRetorno = async function(botao){
+  window.finalizarSemRetorno = function(botao){
     const paradas = viagemAberta.paradas || [];
     if(!paradas.length){
       toast("Registre ao menos uma parada antes de finalizar.", "erro");
@@ -1846,14 +1816,10 @@
     if(!confirm("Tem certeza que deseja finalizar sem retornar à CRIL?")) return;
     if(viagemOcupada){ toast("Aguarde a operação anterior terminar.", "erro"); return; }
     const textoOriginal = travarViagem(botao);
-    try{
-      await finalizarComKm(paradas[paradas.length - 1].km);
-    } finally {
-      destravarViagem(botao, textoOriginal);
-    }
+    finalizarComKm(paradas[paradas.length - 1].km, botao, textoOriginal);
   };
 
-  window.cancelarViagem = async function(botao){
+  window.cancelarViagem = function(botao){
     if(!viagemAberta) return;
     const paradasExistentes = (viagemAberta.paradas || []).length;
     const aviso = paradasExistentes
@@ -1862,20 +1828,15 @@
     if(!confirm(aviso)) return;
     if(viagemOcupada){ toast("Aguarde a operação anterior terminar.", "erro"); return; }
     const textoOriginal = travarViagem(botao);
-    try{
-      await deleteDoc(doc(db, "registros", viagemAberta.id));
-      toast("Viagem cancelada.", "sucesso");
-      viagemAberta = null;
-      mostrarBlocoIniciar();
-    }catch(e){
-      console.error(e);
-      toast("Erro ao cancelar viagem.", "erro");
-    } finally {
-      destravarViagem(botao, textoOriginal);
-    }
+    deleteDoc(doc(db, "registros", viagemAberta.id))
+      .catch(e=> console.error("Erro ao cancelar viagem (será sincronizado depois se offline):", e));
+    toast("Viagem cancelada.", "sucesso");
+    viagemAberta = null;
+    mostrarBlocoIniciar();
+    destravarViagem(botao, textoOriginal);
   };
 
-  window.finalizarViagem = async function(botao){
+  window.finalizarViagem = function(botao){
     const paradas = viagemAberta.paradas || [];
     if(!paradas.length){
       toast("Registre ao menos uma parada antes de finalizar.", "erro");
@@ -1883,30 +1844,23 @@
     }
     if(viagemOcupada){ toast("Aguarde a operação anterior terminar.", "erro"); return; }
     const textoOriginal = travarViagem(botao);
-    try{
-      await finalizarComKm(paradas[paradas.length - 1].km);
-    } finally {
-      destravarViagem(botao, textoOriginal);
-    }
+    finalizarComKm(paradas[paradas.length - 1].km, botao, textoOriginal);
   };
 
-  async function finalizarComKm(kmFinal){
-    try{
-      await updateDoc(doc(db, "registros", viagemAberta.id), {
-        status: "fechado",
-        kmFinal,
-        kmRodado: kmFinal - viagemAberta.kmInicial,
-        horaFinal: serverTimestamp()
-      });
-      await setDoc(doc(db, "veiculos", VEICULO_ID), { kmAtual: kmFinal }, { merge: true });
-      toast("Viagem finalizada.", "sucesso");
-      kmAtualVeiculo = kmFinal;
-      viagemAberta = null;
-      mostrarBlocoIniciar();
-    }catch(e){
-      console.error(e);
-      toast("Erro ao finalizar viagem.", "erro");
-    }
+  function finalizarComKm(kmFinal, botao, textoOriginal){
+    updateDoc(doc(db, "registros", viagemAberta.id), {
+      status: "fechado",
+      kmFinal,
+      kmRodado: kmFinal - viagemAberta.kmInicial,
+      horaFinal: serverTimestamp()
+    }).catch(e=> console.error("Erro ao finalizar viagem (será sincronizado depois se offline):", e));
+    setDoc(doc(db, "veiculos", VEICULO_ID), { kmAtual: kmFinal }, { merge: true })
+      .catch(e=> console.error("Erro ao atualizar KM do veículo (será sincronizado depois se offline):", e));
+    toast("Viagem finalizada.", "sucesso");
+    kmAtualVeiculo = kmFinal;
+    viagemAberta = null;
+    mostrarBlocoIniciar();
+    destravarViagem(botao, textoOriginal);
   }
 
   let cartaoSelecionado = "NORMAL";
@@ -1956,7 +1910,7 @@
     document.getElementById(id).addEventListener("input", atualizarPreviaAutonomia);
   });
 
-  window.registrarAbastecimento = async function(botao){
+  window.registrarAbastecimento = function(botao){
     const km = Number(document.getElementById("input-km-abastecimento").value);
     const litros = Number(document.getElementById("input-litros").value);
     const valorLitro = Number(document.getElementById("input-valor-litro").value);
@@ -1974,35 +1928,29 @@
     }
 
     const textoOriginal = travarBotao(botao);
-    try{
-      await addDoc(collection(db, "abastecimentos"), {
-        data: serverTimestamp(),
-        km, litros, valorLitro, valorTotal,
-        kmRodadoDesdeUltimo, autonomia,
-        cartao: cartaoSelecionado,
-        viagemId: viagemAberta ? viagemAberta.id : null,
-        registradoPor: nomeMotoristaLogado || auth.currentUser.email
-      });
-      const novoKmAtual = Math.max(km, kmAtualVeiculo || 0);
-      await setDoc(doc(db, "veiculos", VEICULO_ID), {
-        kmAtual: novoKmAtual,
-        kmUltimoAbastecimento: km
-      }, { merge: true });
+    addDoc(collection(db, "abastecimentos"), {
+      data: serverTimestamp(),
+      km, litros, valorLitro, valorTotal,
+      kmRodadoDesdeUltimo, autonomia,
+      cartao: cartaoSelecionado,
+      viagemId: viagemAberta ? viagemAberta.id : null,
+      registradoPor: nomeMotoristaLogado || auth.currentUser.email
+    }).catch(e=> console.error("Erro ao gravar abastecimento (será sincronizado depois se offline):", e));
+    const novoKmAtual = Math.max(km, kmAtualVeiculo || 0);
+    setDoc(doc(db, "veiculos", VEICULO_ID), {
+      kmAtual: novoKmAtual,
+      kmUltimoAbastecimento: km
+    }, { merge: true }).catch(e=> console.error("Erro ao atualizar KM do veículo (será sincronizado depois se offline):", e));
 
-      document.getElementById("input-litros").value = "";
-      document.getElementById("input-valor-litro").value = "";
-      document.getElementById("autonomia-preview").style.display = "none";
-      window.selecionarCartao("NORMAL");
-      kmAtualVeiculo = novoKmAtual;
-      kmUltimoAbastecimento = km;
-      toast("Abastecimento registrado.", "sucesso");
-      fecharSecoesMotorista();
-    }catch(e){
-      console.error(e);
-      toast("Erro ao registrar abastecimento.", "erro");
-    } finally {
-      destravarBotao(botao, textoOriginal);
-    }
+    document.getElementById("input-litros").value = "";
+    document.getElementById("input-valor-litro").value = "";
+    document.getElementById("autonomia-preview").style.display = "none";
+    window.selecionarCartao("NORMAL");
+    kmAtualVeiculo = novoKmAtual;
+    kmUltimoAbastecimento = km;
+    toast("Abastecimento registrado.", "sucesso");
+    fecharSecoesMotorista();
+    destravarBotao(botao, textoOriginal);
   };
 
   window.mudarAba = function(aba){
