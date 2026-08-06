@@ -700,6 +700,43 @@
             </div>
           </div>
         </div>
+
+        <div class="card">
+          <h2>Abastecimento retroativo</h2>
+          <div class="card-sub">Pra corrigir ou inserir um abastecimento de uma data passada, já criando também o deslocamento correspondente na planilha de KM. Não mexe na KM atual do veículo (só um lançamento retroativo, não representa o estado de hoje).</div>
+          <div class="field">
+            <label>Data e hora do abastecimento</label>
+            <input type="datetime-local" id="input-retro-data-hora">
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label>KM inicial (antes de ir ao posto)</label>
+              <input type="number" id="input-retro-km-inicial" placeholder="Ex.: 46180">
+            </div>
+            <div class="field">
+              <label>KM final (no abastecimento)</label>
+              <input type="number" id="input-retro-km-final" placeholder="Ex.: 46190">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Litros</label>
+              <input type="number" step="0.01" id="input-retro-litros" placeholder="Ex.: 32.5">
+            </div>
+            <div class="field">
+              <label>Valor por litro (R$)</label>
+              <input type="number" step="0.01" id="input-retro-valor-litro" placeholder="Ex.: 6.19">
+            </div>
+          </div>
+          <div class="field">
+            <label>Cartão utilizado</label>
+            <div class="tipo-opcoes" id="grupo-cartao-retro" style="grid-template-columns:1fr 1fr;">
+              <button type="button" class="tipo-btn cartao-btn selecionado" data-cartao="NORMAL" style="justify-content:center;" onclick="window.selecionarCartaoRetro('NORMAL')">Normal</button>
+              <button type="button" class="tipo-btn cartao-btn" data-cartao="CORINGA" style="justify-content:center;" onclick="window.selecionarCartaoRetro('CORINGA')">Coringa</button>
+            </div>
+          </div>
+          <button class="btn btn-secundario" style="width:100%;" onclick="window.registrarAbastecimentoRetroativo()">Registrar abastecimento retroativo</button>
+        </div>
       </div>
     </div>
   </main>
@@ -970,6 +1007,15 @@
     return (v||0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
   }
 
+  // Data + hora sem segundos (ex.: "04/08/2026 15:39"), usada em todos os relatórios.
+  function formatarDataHora(data){
+    if(!data) return "—";
+    return data.toLocaleString("pt-BR", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+  }
+
   function ligarUpper(inp){
     inp.addEventListener("input", ()=>{
       const cursor = inp.selectionStart;
@@ -1057,7 +1103,7 @@
       const horasAberta = (Date.now() - inicio.getTime()) / (1000*60*60);
       if(horasAberta >= LIMITE_HORAS){
         aviso.innerHTML = '<div class="aviso-card">⚠️ Há uma viagem em aberto desde '
-          + inicio.toLocaleString("pt-BR") + ' (' + horasAberta.toFixed(1)
+          + formatarDataHora(inicio) + ' (' + horasAberta.toFixed(1)
           + 'h atrás). O motorista pode ter esquecido de finalizar — confira com ele ou corrija manualmente na aba Registros.</div>';
         aviso.style.display = "block";
       } else {
@@ -1107,7 +1153,7 @@
       const c = snap.docs[0].data();
       const checklistId = snap.docs[0].id;
       const data = c.data?.toDate ? c.data.toDate() : null;
-      dataEl.textContent = data ? data.toLocaleString("pt-BR") : "—";
+      dataEl.textContent = formatarDataHora(data);
       const irregularidades = (c.itens || []).filter(i=>i.status === "NAO");
       const avisoTopo = document.getElementById("aviso-checklist-defeito");
       const dashDefeitos = document.getElementById("dash-defeitos-checklist");
@@ -1373,7 +1419,7 @@
     document.getElementById("fv-usuario").textContent = viagemAberta.nomeUsuario || "—";
     document.getElementById("fv-tipo").textContent = rotulos[viagemAberta.tipo] || "—";
     const inicio = viagemAberta.horaInicial?.toDate ? viagemAberta.horaInicial.toDate() : null;
-    document.getElementById("fv-inicio").textContent = inicio ? inicio.toLocaleString("pt-BR") : "—";
+    document.getElementById("fv-inicio").textContent = formatarDataHora(inicio);
     document.getElementById("fv-km-inicial").textContent = viagemAberta.kmInicial?.toLocaleString("pt-BR") ?? "—";
 
     const modoHospital = viagemAberta.tipo === "visita_hospitalar";
@@ -1607,7 +1653,7 @@
       }
       const c = snap.docs[0].data();
       const data = c.data?.toDate ? c.data.toDate() : null;
-      info.textContent = "Último checklist enviado em: " + (data ? data.toLocaleString("pt-BR") : "—");
+      info.textContent = "Último checklist enviado em: " + (formatarDataHora(data));
     });
   }
 
@@ -2024,6 +2070,68 @@
     }
   };
 
+  let cartaoRetroSelecionado = "NORMAL";
+  window.selecionarCartaoRetro = function(cartao){
+    cartaoRetroSelecionado = cartao;
+    document.querySelectorAll("#grupo-cartao-retro .cartao-btn").forEach(b=>{
+      b.classList.toggle("selecionado", b.dataset.cartao === cartao);
+    });
+  };
+
+  window.registrarAbastecimentoRetroativo = async function(){
+    const dataHoraStr = document.getElementById("input-retro-data-hora").value;
+    const kmInicial = Number(document.getElementById("input-retro-km-inicial").value);
+    const kmFinal = Number(document.getElementById("input-retro-km-final").value);
+    const litros = Number(document.getElementById("input-retro-litros").value);
+    const valorLitro = Number(document.getElementById("input-retro-valor-litro").value);
+
+    if(!dataHoraStr){ toast("Informe a data e hora do abastecimento.", "erro"); return; }
+    if(!kmInicial){ toast("Informe a KM inicial.", "erro"); return; }
+    if(!kmFinal){ toast("Informe a KM final.", "erro"); return; }
+    if(kmFinal < kmInicial){ toast("KM final não pode ser menor que a KM inicial.", "erro"); return; }
+    if(!litros){ toast("Informe os litros.", "erro"); return; }
+    if(!valorLitro){ toast("Informe o valor por litro.", "erro"); return; }
+
+    const dataEscolhida = new Date(dataHoraStr);
+    const valorTotal = litros * valorLitro;
+
+    try{
+      await addDoc(collection(db, "abastecimentos"), {
+        data: Timestamp.fromDate(dataEscolhida),
+        km: kmFinal, litros, valorLitro, valorTotal,
+        kmRodadoDesdeUltimo: null,
+        autonomia: null,
+        cartao: cartaoRetroSelecionado,
+        viagemId: null,
+        registradoPor: (nomeMotoristaLogado || auth.currentUser.email) + " (retroativo)"
+      });
+      await addDoc(collection(db, "registros"), {
+        status: "fechado",
+        tipo: "outro",
+        nomeUsuario: "",
+        destino: "",
+        paradas: [{ local: "Abastecimento", km: kmFinal, hora: dataEscolhida }],
+        kmInicial,
+        kmFinal,
+        kmRodado: kmFinal - kmInicial,
+        horaInicial: Timestamp.fromDate(dataEscolhida),
+        horaFinal: Timestamp.fromDate(dataEscolhida),
+        registradoPor: (nomeMotoristaLogado || auth.currentUser.email) + " (retroativo)",
+        editadoPor: null,
+        editadoEm: null
+      });
+      document.getElementById("input-retro-data-hora").value = "";
+      document.getElementById("input-retro-km-inicial").value = "";
+      document.getElementById("input-retro-km-final").value = "";
+      document.getElementById("input-retro-litros").value = "";
+      document.getElementById("input-retro-valor-litro").value = "";
+      toast("Abastecimento retroativo registrado.", "sucesso");
+    }catch(e){
+      console.error(e);
+      toast("Erro ao registrar abastecimento retroativo.", "erro");
+    }
+  };
+
   let registrosDoPeriodo = [];
   let abastecimentosDoPeriodo = [];
   let checklistsCarregados = [];
@@ -2271,7 +2379,7 @@
       const dataObj = a.data?.toDate ? a.data.toDate() : null;
       const cartao = a.cartao || "NORMAL";
       tr.innerHTML =
-        "<td>" + (dataObj ? dataObj.toLocaleString("pt-BR") : "—") + "</td>" +
+        "<td>" + (formatarDataHora(dataObj)) + "</td>" +
         "<td class=\"mono\">" + (a.km?.toLocaleString("pt-BR") ?? "—") + "</td>" +
         "<td class=\"mono\">" + (a.litros?.toLocaleString("pt-BR",{maximumFractionDigits:2}) ?? "—") + "</td>" +
         "<td class=\"mono\">" + formatarMoeda(a.valorLitro) + "</td>" +
@@ -2404,7 +2512,7 @@
         const l = linhas[i];
         linhasHtml +=
           "<tr>" +
-          "<td>" + (l.data ? l.data.toLocaleString("pt-BR") : "") + "</td>" +
+          "<td>" + (formatarDataHora(l.data)) + "</td>" +
           "<td>" + (l.km?.toLocaleString("pt-BR") ?? "") + "</td>" +
           "<td>" + (l.litros?.toLocaleString("pt-BR",{maximumFractionDigits:2}) ?? "") + "</td>" +
           "<td>" + formatarMoeda(l.valorLitro) + "</td>" +
