@@ -1934,6 +1934,27 @@
       viagemId: viagemAberta ? viagemAberta.id : null,
       registradoPor: nomeMotoristaLogado || auth.currentUser.email
     }).catch(e=> console.error("Erro ao gravar abastecimento (será sincronizado depois se offline):", e));
+
+    // Todo deslocamento até o posto também precisa constar na planilha de KM,
+    // mesmo sem valores de combustível — só o deslocamento em si.
+    const kmInicialAbastecimento = kmAtualVeiculo || km;
+    const agoraAbastecimento = new Date();
+    addDoc(collection(db, "registros"), {
+      status: "fechado",
+      tipo: "outro",
+      nomeUsuario: "",
+      destino: "",
+      paradas: [{ local: "Abastecimento", km, hora: agoraAbastecimento }],
+      kmInicial: kmInicialAbastecimento,
+      kmFinal: km,
+      kmRodado: km - kmInicialAbastecimento,
+      horaInicial: serverTimestamp(),
+      horaFinal: serverTimestamp(),
+      registradoPor: nomeMotoristaLogado || auth.currentUser.email,
+      editadoPor: null,
+      editadoEm: null
+    }).catch(e=> console.error("Erro ao gravar deslocamento do abastecimento (será sincronizado depois se offline):", e));
+
     const novoKmAtual = Math.max(km, kmAtualVeiculo || 0);
     setDoc(doc(db, "veiculos", VEICULO_ID), {
       kmAtual: novoKmAtual,
