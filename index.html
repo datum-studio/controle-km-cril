@@ -589,15 +589,11 @@
       <div id="aba-dashboard">
         <div class="card">
           <div class="dash-grid">
+            <div class="dash-stat destaque"><div class="n mono" id="dash-km-atual">—</div><div class="l">KM atual do veículo</div></div>
             <div class="dash-stat"><div class="n mono" id="dash-total-km">—</div><div class="l">KM total no período</div></div>
             <div class="dash-stat"><div class="n mono" id="dash-autonomia-atual">—</div><div class="l">Autonomia atual (km/l)</div></div>
-            <div class="dash-stat destaque"><div class="n mono" id="dash-gasto-combustivel">—</div><div class="l">Gasto com combustível</div></div>
+            <div class="dash-stat"><div class="n mono" id="dash-gasto-combustivel">—</div><div class="l">Gasto com combustível</div></div>
             <div class="dash-stat" id="dash-card-defeitos"><div class="n mono" id="dash-defeitos-checklist">—</div><div class="l">Defeitos no último checklist</div></div>
-          </div>
-          <div class="dash-grid">
-            <div class="dash-stat"><div class="n mono" id="dash-qtd-hospitalar">—</div><div class="l">Visita hospitalar</div></div>
-            <div class="dash-stat"><div class="n mono" id="dash-qtd-viagem">—</div><div class="l">Viagem</div></div>
-            <div class="dash-stat"><div class="n mono" id="dash-qtd-outro">—</div><div class="l">Outro</div></div>
           </div>
         </div>
       </div>
@@ -1076,6 +1072,8 @@
     onSnapshot(doc(db, "veiculos", VEICULO_ID), (snap)=>{
       if(!snap.exists()) return;
       const d = snap.data();
+      const dashKmAtual = document.getElementById("dash-km-atual");
+      if(dashKmAtual) dashKmAtual.textContent = (d.kmAtual != null ? d.kmAtual.toLocaleString("pt-BR") + " km" : "—");
       const campoKm = document.getElementById("input-intervalo-km-oleo");
       const campoMeses = document.getElementById("input-intervalo-meses-oleo");
       if(campoKm && document.activeElement !== campoKm){
@@ -2045,15 +2043,9 @@
     const fechados = registrosDoPeriodo.filter(r=>r.status==="fechado");
     const totalKm = fechados.reduce((s,r)=> s + (r.kmRodado||0), 0);
     const gastoCombustivel = abastecimentosDoPeriodo.reduce((s,a)=> s + (a.valorTotal||0), 0);
-    const qtdHospitalar = registrosDoPeriodo.filter(r=>r.tipo === "visita_hospitalar").length;
-    const qtdViagem = registrosDoPeriodo.filter(r=>r.tipo === "viagem").length;
-    const qtdOutro = registrosDoPeriodo.filter(r=>r.tipo === "outro").length;
 
     document.getElementById("dash-total-km").textContent = totalKm.toLocaleString("pt-BR") + " km";
     document.getElementById("dash-gasto-combustivel").textContent = formatarMoeda(gastoCombustivel);
-    document.getElementById("dash-qtd-hospitalar").textContent = qtdHospitalar;
-    document.getElementById("dash-qtd-viagem").textContent = qtdViagem;
-    document.getElementById("dash-qtd-outro").textContent = qtdOutro;
   }
 
   const rotulosTipo = {visita_hospitalar:"Visita hospitalar", viagem:"Viagem", outro:"Outro"};
