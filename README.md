@@ -1,18 +1,14 @@
 # Gestão de Frota · CRIL
 
-PWA para gestão do veículo da Central de Regulação Interestadual de Leitos (Polo Track, placa SWA 7G41) — controle de quilometragem, abastecimento e checklist semanal, substituindo a planilha impressa.
+PWA para gestão do veículo da Central de Regulação Interestadual de Leitos (Polo Track, placa SWA 7G41) — controle de quilometragem, abastecimento e checklist diário, substituindo a planilha impressa.
 
 ## Ajustes mais recentes
 
-- **Causa raiz das páginas em branco encontrada e corrigida**: o CSS de impressão escondia o resto do app com `visibility:hidden`, que esconde visualmente mas continua ocupando o espaço no layout — como a tela do app é bem mais alta que uma folha impressa, isso gerava páginas extra em branco depois do relatório. Trocado para `display:none`, que remove esse conteúdo do fluxo da página de verdade
-- Numeração de página removida dos três relatórios (registros, abastecimentos, checklist) — não estava ficando no rodapé como devia, e sem ela os relatórios ficam mais simples e sem risco de gerar página extra por causa do cálculo
-- **Nova paleta de cores**: sistema todo migrado para o turquesa/verde-acinzentado da CRIL (#446256), com variações harmônicas — login, cabeçalho, botões, ícones do PWA e logo da impressão
-- Botões de seleção do motorista (tipo de deslocamento, cartão, checklist, abastecimento, troca de óleo) redesenhados: maiores, empilhados, com ícone — menos chance de toque errado
-- PDFs gerados agora vêm com nome de arquivo pronto (ex.: `Registros-CRIL_2026-07-01_a_2026-07-24.pdf`), sem precisar renomear ao baixar
-- `sw.js` com versão de cache atualizada (era `km-cril-v2`, agora `km-cril-v3`) — **esse arquivo também precisa ser reenviado ao GitHub**, senão o navegador de quem já visitou o site antes continua servindo a versão antiga em cache
-- Aviso de defeito no topo do painel do admin agora só reaparece quando surgir um checklist novo com defeito — some ao clicar em "Ver detalhes" ou no botão "Ciente"
-- Botão de gerar PDF de registros renomeado e movido pra dentro da aba Registros — cada aba (Registros/Combustível/Manutenção) agora tem seu próprio botão de PDF, e o filtro de data continua compartilhado entre todas
-- Ícones do PWA e favicon atualizados com a nova cor
+- **Checklist reformulado para seguir a determinação oficial da FESFSUS**: agora é diário (não mais semanal), com os 26 itens exatos do documento oficial (pneus, faróis, freios, direção, extintor, estepe, macaco, avarias na lataria, etc.), cada um marcado como **OK / Não / N/A** — sem mais os termos mecânicos específicos que tínhamos antes
+- Formulário do motorista agora tem dois campos gerais no final — **Observações/Irregularidades** e **Providências adotadas** — em vez de uma observação por item
+- **Novo PDF de checklist**: em vez de um relatório histórico por período, agora cada checklist enviado tem seu próprio botão **"Imprimir"** na aba Manutenção, gerando uma ficha de 2 páginas que replica exatamente o padrão visual da FESFSUS (logo, rodapé, campos, tabela de checkboxes, campo de assinatura do motorista) — já preenchida com os dados digitados no sistema, para o motorista só assinar no papel
+- Aviso do dashboard atualizado: agora sinaliza itens marcados como **"Não"** (antes chamados de "defeito")
+- PWA confirmado funcionando no celular; linhas por página dos relatórios aumentadas (20 registros / 24 combustível) já que a causa raiz das páginas em branco foi corrigida
 
 ## O que já está pronto (v1)
 
@@ -29,10 +25,10 @@ PWA para gestão do veículo da Central de Regulação Interestadual de Leitos (
 - **Se o motorista esquecer de registrar algo**: (1) o motorista pode escolher manualmente o horário de cada parada, não fica preso ao "agora"; (2) o admin pode adicionar, corrigir ou remover paradas de qualquer viagem já registrada, na aba Registros; (3) o painel do admin mostra um aviso quando existe uma viagem em aberto há mais de 12h, sinal de que o motorista pode ter esquecido de finalizar
 - **KM do cartão de abastecimento**: existe um deslocamento fixo (resto de KM de um carro anterior) que se soma à KM real do carro para dar o número que o motorista informa ao posto — mas só quando o **cartão Coringa** é usado. No abastecimento, o motorista escolhe entre cartão **Normal** (informa a KM real do carro, sem soma nenhuma) ou **Coringa** (informa a KM real + deslocamento). O admin configura esse deslocamento na aba Combustível; o motorista só vê o resultado já somado, em destaque, e apenas quando o Coringa está selecionado
 - **Relatório de abastecimentos em PDF**: na aba Combustível, o admin pode gerar um relatório (via impressão do navegador, "salvar como PDF") com data, KM, litros, valor/litro, total, autonomia e qual cartão foi usado em cada abastecimento do período — sem vincular à viagem. Termina com um resumo de totais e um campo de assinatura da Gestão
-- **Checklist semanal do carro**: toda semana (a partir de segunda-feira), o motorista faz uma vistoria completa — óleo, líquido de arrefecimento, elétrica/iluminação (faróis, luzes de freio/ré, setas, buzina), pneus/estepe/freios, cinto/para-brisa/palhetas, bateria/mecânica, e lataria (riscos/amassados por parte: para-choques, capô, portas, teto). Cada item tem opções específicas com termos mecânicos reais (ex.: óleo → "Nível baixo", "Vazando", "Sujo/vencido"; pneus → "Careca/seco", "Murcho", "Bolha/dano"; farol → "Queimado", "Quebrado", "Desregulado"), em vez de um genérico "Defeito". Nenhum item vem pré-marcado — o motorista precisa marcar todos, senão o envio é bloqueado. Um campo de observação opcional fica disponível para detalhar qualquer item fora do "OK". A tela inicial do motorista mostra um aviso se o checklist da semana ainda não foi feito. Itens de lataria são reconfirmados toda semana (não persistem sozinhos — se o motorista marcar OK, o item sai da lista de defeitos ativos)
+- **Checklist diário do carro (padrão oficial FESFSUS)**: todo dia, o motorista faz a vistoria com os 26 itens do documento oficial da FESFSUS — pneus, faróis, lanternas, setas, luzes de freio/ré, limpador/lavador do para-brisa, retrovisores, vidros, para-brisa, freios, direção, painel, nível de combustível, documento do veículo, extintor, estepe, macaco, chave de roda, triângulo, limpeza interna/externa e avarias na lataria. Cada item é marcado **OK / Não / N/A** — nenhum vem pré-marcado, o motorista precisa marcar todos ou o envio é bloqueado. No final, dois campos gerais: **Observações/Irregularidades** e **Providências adotadas**. A tela inicial do motorista mostra um aviso se o checklist de hoje ainda não foi feito, e a data do último enviado
 - **Controle de troca de óleo**: separado do checklist. Motorista registra quando trocou o óleo (KM); o admin configura os intervalos (por KM rodado e por meses — vale o que vencer primeiro). O sistema avisa tanto o motorista (tela inicial) quanto o admin (aba Manutenção) quando a troca está vencida
-- **Aba Manutenção (admin)**: mostra o status da troca de óleo (última troca, próxima prevista, se está vencida), os defeitos sinalizados no último checklist, e o histórico completo de checklists enviados (data, semana, quantidade de defeitos, quem enviou) — assim a gestão sempre consegue ver se o motorista sinalizou algum problema
-- Estrutura de PWA (manifest + service worker) pronta para "instalar" no celular/tablet do motorista, com ícones reais da CRIL em `icons/icon-192.png` e `icons/icon-512.png` (arquivos de verdade, não mais em base64 — mais confiável para o Android reconhecer como instalável)
+- **Aba Manutenção (admin)**: mostra o status da troca de óleo (última troca, próxima prevista, se está vencida), as irregularidades (itens marcados "Não") do último checklist, e o histórico completo de checklists enviados (data, horário, motorista, itens marcados "Não", botão de imprimir a ficha) — assim a gestão sempre consegue ver se o motorista sinalizou algum problema
+- Estrutura de PWA (manifest + service worker) pronta para "instalar" no celular/tablet do motorista, com ícones reais da CRIL em `icon-192.png` e `icon-512.png`, na raiz do projeto (arquivos de verdade, não mais em base64 — mais confiável para o Android reconhecer como instalável)
 - Em visita hospitalar, a lista de nomes de usuário é restrita a Eliete Castro, Katia Kalene e Maria Grasiela; em viagem, continua com a lista completa, e permite **selecionar mais de um usuário** (Ctrl/Cmd+clique para selecionar vários), já que uma viagem longa pode levar mais de uma pessoa
 
 **Fora do escopo desta v1** (combinado com a Débora): OCR de leitura da KM (testado e removido — não funcionou bem), GPS, assinatura digital no app — ficam para uma v2, ou não avançam mais.
@@ -102,11 +98,10 @@ service cloud.firestore {
 ```
 
 ### 7. Deploy no GitHub Pages
-Mesmo padrão dos outros projetos Datum Studio: subir esta pasta para um repositório e ativar o GitHub Pages apontando para a branch/pasta raiz. **Importante**: a pasta `icons/` (com `icon-192.png` e `icon-512.png`) precisa subir junto — sem ela, o Android não reconhece o app como instalável.
+Mesmo padrão dos outros projetos Datum Studio: subir esta pasta para um repositório e ativar o GitHub Pages apontando para a branch/pasta raiz. **Importante**: os arquivos `icon-192.png` e `icon-512.png` precisam subir junto, soltos na raiz do repositório (não dentro de nenhuma subpasta) — sem eles, o Android não reconhece o app como instalável.
 
 ### 8. Se o PWA não aparecer como instalável no Android
-- **Teste direto e definitivo**: abra `https://datum-studio.github.io/controle-km-cril/icons/icon-192.png` direto no navegador. Se aparecer a imagem do ícone, o arquivo está publicado corretamente; se der erro 404/página não encontrada, a pasta `icons/` ainda não está no repositório (ou está num lugar errado) — esse é o motivo mais provável do PWA não instalar, tanto no PC quanto no celular
-- Confirme que a pasta `icons/` foi enviada ao repositório (ela precisa estar publicada, não só existir localmente)
+- **Teste direto e definitivo**: abra `https://datum-studio.github.io/controle-km-cril/icon-192.png` direto no navegador. Se aparecer a imagem do ícone, o arquivo está publicado corretamente; se der erro 404, ele não está na raiz do repositório
 - No Chrome do celular, abra o menu (⋮) → deve aparecer "Instalar aplicativo" ou "Adicionar à tela inicial" mesmo sem o banner automático aparecer sozinho. No computador, o ícone de instalação normalmente aparece dentro da barra de endereço, à direita
 - Se quiser conferir o que está travando, no computador abra a URL publicada no Chrome, aperte F12 → aba **Application** → **Manifest**: ali aparece qualquer erro de ícone ou configuração
 - Depois de qualquer atualização de arquivo (incluindo o `sw.js`), é bom fechar e reabrir a aba (ou limpar o cache do site) antes de tentar instalar de novo, já que o service worker guarda uma cópia antiga em cache
@@ -155,16 +150,22 @@ usuarios/{uid}
   nome: string (usado na saudação e para identificar quem registrou algo nos relatórios)
 
 checklists/{id}
-  semanaInicio: string ("YYYY-MM-DD" da segunda-feira daquela semana, usado para saber se já foi feito)
+  dataStr: string ("YYYY-MM-DD" do dia da vistoria, usado para saber se já foi feito hoje)
   data: timestamp (momento do envio)
+  motorista: string (nome de quem fez a vistoria, aparece na ficha impressa)
   registradoPor: string (nome do usuário logado, com e-mail como reserva se o nome não estiver cadastrado)
-  itens: array de { categoria: string, item: string, status: string (ex.: "OK", "Nível baixo", "Queimado", "Careca/seco" — específico por item), descricao: string (observação opcional) }
+  itens: array de { item: string, status: "OK" | "NAO" | "NA" } — os 26 itens fixos do padrão FESFSUS
+  observacoes: string (Observações/Irregularidades gerais do checklist)
+  providencias: string (Providências adotadas, quando houver)
+  assinaturaMotorista: string (imagem da assinatura desenhada no celular, em base64 — obrigatória para enviar)
 ```
 
 Observações:
 - Uma viagem pode ter quantas paradas forem necessárias (ex.: visitar 3 hospitais diferentes, ou parar no hotel + reunião + hospital numa mesma viagem). Cada parada registra local e KM.
 - Em visita hospitalar e outro, finalizar exige confirmar a chegada na CRIL (com KM) ou confirmar explicitamente que não retornou. Em viagem, finaliza direto com a KM da última parada.
 - "abastecimento" é uma ação independente — disponível a qualquer momento, inclusive durante uma viagem em aberto.
+- Todo abastecimento gera automaticamente um **registro de deslocamento fechado** (na coleção `registros`), com KM inicial = última KM conhecida do carro e KM final = KM do abastecimento, itinerário "Outro - Abastecimento", sem valores de combustível — assim ele aparece na planilha/relatório de KM, já que toda movimentação do carro precisa constar ali. Isso vale mesmo quando já existe uma viagem em aberto (a política é registrar todo deslocamento, mesmo que se sobreponha a uma viagem em andamento). O abastecimento guarda o ID desse registro em `registroDeslocamentoId`, permitindo excluir os dois juntos pela aba Combustível (botão "Excluir" na tabela). Abastecimentos criados antes dessa vinculação existir não têm esse campo — excluí-los remove só o abastecimento, e o registro de deslocamento correspondente (se houver) precisa ser apagado manualmente na aba Registros.
+- **Abastecimento retroativo (aba Configurações, admin)**: pra corrigir ou lançar um abastecimento de data passada, sem precisar mexer direto no Firestore Console. Cria de uma vez o documento em `abastecimentos` e o registro de deslocamento correspondente em `registros` (mesma lógica do abastecimento normal, mas com KM inicial informada manualmente em vez de puxada automaticamente). Não atualiza a KM atual do veículo, já que é um lançamento do passado.
 - As listas de hospitais (`HOSPITAIS`) e usuários (`USUARIOS`) sugeridos ficam no início do `<script>` do `index.html` — para adicionar/editar nomes, é só editar esses dois arrays diretamente no código.
 
 ## Próximos passos sugeridos (v2)

@@ -635,7 +635,7 @@
             <table class="registros">
               <thead>
                 <tr>
-                  <th>Data</th><th>KM no abastecimento</th><th>Litros</th><th>Valor/Litro</th><th>Total</th><th>Autonomia</th><th>Cartão</th>
+                  <th>Data</th><th>KM no abastecimento</th><th>Litros</th><th>Valor/Litro</th><th>Total</th><th>Autonomia</th><th>Cartão</th><th></th>
                 </tr>
               </thead>
               <tbody id="tabela-combustivel-body"></tbody>
@@ -646,14 +646,6 @@
       </div>
 
       <div id="aba-manutencao" style="display:none;">
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2 style="margin:0;">Irregularidades do último checklist</h2>
-            <span class="card-sub" style="margin:0;">Enviado em: <b id="checklist-ultima-data">—</b></span>
-          </div>
-          <div id="checklist-defeitos-body" style="margin-top:12px;"></div>
-        </div>
-
         <div class="card">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
             <h2 style="margin:0;">Histórico de checklists</h2>
@@ -1145,46 +1137,32 @@
 
     const qUltimo = query(collection(db, "checklists"), orderBy("data", "desc"), limit(1));
     onSnapshot(qUltimo, (snap)=>{
-      const dataEl = document.getElementById("checklist-ultima-data");
-      const corpo = document.getElementById("checklist-defeitos-body");
-      if(!dataEl || !corpo) return;
+      const dashDefeitos = document.getElementById("dash-defeitos-checklist");
+      const cardDefeitos = document.getElementById("dash-card-defeitos");
+      const avisoTopo = document.getElementById("aviso-checklist-defeito");
       if(snap.empty){
-        dataEl.textContent = "—";
-        corpo.innerHTML = '<div class="vazio">Nenhum checklist enviado ainda.</div>';
+        if(dashDefeitos) dashDefeitos.textContent = "0";
+        if(cardDefeitos) cardDefeitos.classList.add("destaque");
+        if(avisoTopo) avisoTopo.style.display = "none";
         return;
       }
       const c = snap.docs[0].data();
       const checklistId = snap.docs[0].id;
-      const data = c.data?.toDate ? c.data.toDate() : null;
-      dataEl.textContent = formatarDataHora(data);
       const irregularidades = (c.itens || []).filter(i=>i.status === "NAO");
-      const avisoTopo = document.getElementById("aviso-checklist-defeito");
-      const dashDefeitos = document.getElementById("dash-defeitos-checklist");
-      const cardDefeitos = document.getElementById("dash-card-defeitos");
       if(dashDefeitos) dashDefeitos.textContent = irregularidades.length;
       if(cardDefeitos) cardDefeitos.classList.toggle("destaque", irregularidades.length === 0);
       if(!irregularidades.length){
-        corpo.innerHTML = '<div class="aviso-card verde">✅ Nenhuma irregularidade sinalizada no último checklist.</div>';
         if(avisoTopo) avisoTopo.style.display = "none";
-      } else {
-        let html = irregularidades.map(def=>
-          '<div class="parada-item"><div><div class="parada-local">' + def.item + '</div></div></div>'
-        ).join("");
-        if(c.observacoes){
-          html += '<div class="parada-meta" style="margin-top:8px;"><b>Observações:</b> ' + c.observacoes + '</div>';
-        }
-        corpo.innerHTML = html;
-        if(avisoTopo){
-          const jaVisto = localStorage.getItem("ultimoChecklistVistoId") === checklistId;
-          if(jaVisto){
-            avisoTopo.style.display = "none";
-          } else {
-            avisoTopo.innerHTML = '<div class="aviso-card">🔧 O último checklist tem ' + irregularidades.length
-              + ' item(ns) marcado(s) como "Não". '
-              + '<button class="btn-link" onclick="window.marcarChecklistVisto(\'' + checklistId + '\', true)">Ver detalhes</button>'
-              + ' <button class="btn-link" onclick="window.marcarChecklistVisto(\'' + checklistId + '\', false)">Ciente</button></div>';
-            avisoTopo.style.display = "block";
-          }
+      } else if(avisoTopo){
+        const jaVisto = localStorage.getItem("ultimoChecklistVistoId") === checklistId;
+        if(jaVisto){
+          avisoTopo.style.display = "none";
+        } else {
+          avisoTopo.innerHTML = '<div class="aviso-card">🔧 O último checklist tem ' + irregularidades.length
+            + ' item(ns) marcado(s) como "Não". '
+            + '<button class="btn-link" onclick="window.marcarChecklistVisto(\'' + checklistId + '\', true)">Ver detalhes</button>'
+            + ' <button class="btn-link" onclick="window.marcarChecklistVisto(\'' + checklistId + '\', false)">Ciente</button></div>';
+          avisoTopo.style.display = "block";
         }
       }
     });
@@ -1192,35 +1170,7 @@
     const qHistorico = query(collection(db, "checklists"), orderBy("data", "desc"));
     onSnapshot(qHistorico, (snap)=>{
       checklistsCarregados = snap.docs.map(d=>({ id: d.id, ...d.data() }));
-      const tbody = document.getElementById("tabela-checklist-body");
-      const vazio = document.getElementById("checklist-historico-vazio");
-      if(!tbody) return;
-      tbody.innerHTML = "";
-      vazio.style.display = snap.empty ? "block" : "none";
-      checklistsCarregados.forEach(c=>{
-        const data = c.data?.toDate ? c.data.toDate() : null;
-        const expandido = checklistsExpandidos.has(c.id);
-        const tr = document.createElement("tr");
-        tr.innerHTML =
-          "<td>" + (data ? data.toLocaleDateString("pt-BR") : "—") + "</td>" +
-          "<td>" + (data ? data.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—") + "</td>" +
-          "<td>" + (c.motorista || "—") + "</td>" +
-          "<td style=\"white-space:nowrap;\">" +
-          "<button class=\"btn-link\" style=\"margin-right:16px;\" onclick=\"window.alternarEdicaoChecklist('" + c.id + "')\">" + (expandido ? "Fechar" : "Editar") + "</button>" +
-          "<button class=\"btn-link\" style=\"margin-right:16px;\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button>" +
-          "<button class=\"btn-link\" style=\"color:var(--vermelho);\" onclick=\"window.excluirChecklist('" + c.id + "')\">Excluir</button>" +
-          "</td>";
-        tbody.appendChild(tr);
-
-        if(expandido){
-          const trExp = document.createElement("tr");
-          const tdExp = document.createElement("td");
-          tdExp.colSpan = 4;
-          tdExp.innerHTML = montarEditorChecklist(c);
-          trExp.appendChild(tdExp);
-          tbody.appendChild(trExp);
-        }
-      });
+      renderizarHistoricoChecklistAgora();
     });
   }
 
@@ -1261,9 +1211,20 @@
 
   function renderizarHistoricoChecklistAgora(){
     const tbody = document.getElementById("tabela-checklist-body");
+    const vazio = document.getElementById("checklist-historico-vazio");
     if(!tbody) return;
+
+    const inicioInput = document.getElementById("filtro-data-inicio");
+    const fimInput = document.getElementById("filtro-data-fim");
+    const dataInicioStr = inicioInput ? inicioInput.value : "";
+    const dataFimStr = fimInput ? fimInput.value : "";
+    const checklistsFiltrados = (dataInicioStr && dataFimStr)
+      ? checklistsCarregados.filter(c=> c.dataStr && c.dataStr >= dataInicioStr && c.dataStr <= dataFimStr)
+      : checklistsCarregados;
+
     tbody.innerHTML = "";
-    checklistsCarregados.forEach(c=>{
+    if(vazio) vazio.style.display = checklistsFiltrados.length === 0 ? "block" : "none";
+    checklistsFiltrados.forEach(c=>{
       const data = c.data?.toDate ? c.data.toDate() : null;
       const expandido = checklistsExpandidos.has(c.id);
       const tr = document.createElement("tr");
@@ -1989,12 +1950,15 @@
     }
 
     const textoOriginal = travarBotao(botao);
-    addDoc(collection(db, "abastecimentos"), {
+    const refAbastecimento = doc(collection(db, "abastecimentos"));
+    const refRegistro = doc(collection(db, "registros"));
+    setDoc(refAbastecimento, {
       data: serverTimestamp(),
       km, litros, valorLitro, valorTotal,
       kmRodadoDesdeUltimo, autonomia,
       cartao: cartaoSelecionado,
       viagemId: viagemAberta ? viagemAberta.id : null,
+      registroDeslocamentoId: refRegistro.id,
       registradoPor: nomeMotoristaLogado || auth.currentUser.email
     }).catch(e=> console.error("Erro ao gravar abastecimento (será sincronizado depois se offline):", e));
 
@@ -2002,7 +1966,7 @@
     // mesmo sem valores de combustível — só o deslocamento em si.
     const kmInicialAbastecimento = kmAtualVeiculo || km;
     const agoraAbastecimento = new Date();
-    addDoc(collection(db, "registros"), {
+    setDoc(refRegistro, {
       status: "fechado",
       tipo: "outro",
       nomeUsuario: "",
@@ -2113,16 +2077,19 @@
     const valorTotal = litros * valorLitro;
 
     try{
-      await addDoc(collection(db, "abastecimentos"), {
+      const refAbastecimento = doc(collection(db, "abastecimentos"));
+      const refRegistro = doc(collection(db, "registros"));
+      await setDoc(refAbastecimento, {
         data: Timestamp.fromDate(dataEscolhida),
         km: kmFinal, litros, valorLitro, valorTotal,
         kmRodadoDesdeUltimo: null,
         autonomia: null,
         cartao: cartaoRetroSelecionado,
         viagemId: null,
+        registroDeslocamentoId: refRegistro.id,
         registradoPor: (nomeMotoristaLogado || auth.currentUser.email) + " (retroativo)"
       });
-      await addDoc(collection(db, "registros"), {
+      await setDoc(refRegistro, {
         status: "fechado",
         tipo: "outro",
         nomeUsuario: "",
@@ -2183,6 +2150,8 @@
       renderizarTabela();
       renderizarCombustivel();
     });
+
+    renderizarHistoricoChecklistAgora();
   };
 
   function renderizarDashboard(){
@@ -2402,10 +2371,28 @@
         "<td class=\"mono\">" + formatarMoeda(a.valorLitro) + "</td>" +
         "<td class=\"mono\">" + formatarMoeda(a.valorTotal) + "</td>" +
         "<td class=\"mono\">" + (a.autonomia ? a.autonomia.toFixed(2)+" km/l" : "—") + "</td>" +
-        "<td><span class=\"tipo-pill " + (cartao === "CORINGA" ? "outro" : "visita") + "\">" + cartao + "</span></td>";
+        "<td><span class=\"tipo-pill " + (cartao === "CORINGA" ? "outro" : "visita") + "\">" + cartao + "</span></td>" +
+        "<td><button class=\"btn-link\" style=\"color:var(--vermelho);\" onclick=\"window.excluirAbastecimento('" + a.id + "', '" + (a.registroDeslocamentoId || "") + "')\">Excluir</button></td>";
       tbody.appendChild(tr);
     });
   }
+
+  window.excluirAbastecimento = async function(abastecimentoId, registroDeslocamentoId){
+    const aviso = registroDeslocamentoId
+      ? "Excluir esse abastecimento? Isso também vai apagar o deslocamento correspondente na planilha de KM."
+      : "Excluir esse abastecimento? (Abastecimentos antigos, de antes dessa função existir, podem ter deixado um deslocamento solto na planilha de KM — se for o caso, exclua ele manualmente na aba Registros.)";
+    if(!confirm(aviso)) return;
+    try{
+      await deleteDoc(doc(db, "abastecimentos", abastecimentoId));
+      if(registroDeslocamentoId){
+        await deleteDoc(doc(db, "registros", registroDeslocamentoId));
+      }
+      toast("Abastecimento excluído.", "sucesso");
+    }catch(e){
+      console.error(e);
+      toast("Erro ao excluir abastecimento.", "erro");
+    }
+  };
 
   window.gerarImpressao = function(){
     const { dataInicioStr, dataFimStr } = obterIntervaloFiltro();
