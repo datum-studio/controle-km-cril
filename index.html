@@ -2207,8 +2207,8 @@
 
   function resumoParadas(paradas, nomeUsuario){
     if(!paradas || !paradas.length) return "—";
-    const sufixoUsuario = nomeUsuario ? " (" + nomeUsuario + ")" : "";
-    return paradas.map((p,i)=> (i+1) + ". " + p.local + sufixoUsuario + " — " + p.km.toLocaleString("pt-BR") + " km").join(" · ");
+    const listaParadas = paradas.map((p,i)=> (i+1) + ". " + p.local + " — " + p.km.toLocaleString("pt-BR") + " km").join(" · ");
+    return nomeUsuario ? "(" + nomeUsuario + ") " + listaParadas : listaParadas;
   }
 
   function renderizarTabela(){
