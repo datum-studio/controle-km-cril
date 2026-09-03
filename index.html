@@ -655,8 +655,11 @@
         </div>
 
         <div class="card">
-          <h2>Histórico de checklists</h2>
-          <div class="card-sub">Clique em "Baixar" pra gerar o PDF da ficha no padrão FESFSUS (nomeado com a data do checklist), pronta pra colher a assinatura do motorista.</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <h2 style="margin:0;">Histórico de checklists</h2>
+            <button class="btn btn-primario" style="width:auto;" onclick="window.gerarFichaChecklistsPeriodo()">Baixar checklists do período</button>
+          </div>
+          <div class="card-sub">Clique em "Baixar" numa linha pra gerar só aquele checklist, ou em "Baixar checklists do período" acima pra juntar todos do período filtrado (topo da página) num único PDF.</div>
           <div style="overflow-x:auto;">
             <table class="registros">
               <thead>
@@ -1204,7 +1207,8 @@
           "<td>" + (c.motorista || "—") + "</td>" +
           "<td style=\"white-space:nowrap;\">" +
           "<button class=\"btn-link\" style=\"margin-right:16px;\" onclick=\"window.alternarEdicaoChecklist('" + c.id + "')\">" + (expandido ? "Fechar" : "Editar") + "</button>" +
-          "<button class=\"btn-link\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button>" +
+          "<button class=\"btn-link\" style=\"margin-right:16px;\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button>" +
+          "<button class=\"btn-link\" style=\"color:var(--vermelho);\" onclick=\"window.excluirChecklist('" + c.id + "')\">Excluir</button>" +
           "</td>";
         tbody.appendChild(tr);
 
@@ -1269,7 +1273,8 @@
         "<td>" + (c.motorista || "—") + "</td>" +
         "<td style=\"white-space:nowrap;\">" +
         "<button class=\"btn-link\" style=\"margin-right:16px;\" onclick=\"window.alternarEdicaoChecklist('" + c.id + "')\">" + (expandido ? "Fechar" : "Editar") + "</button>" +
-        "<button class=\"btn-link\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button>" +
+        "<button class=\"btn-link\" style=\"margin-right:16px;\" onclick=\"window.gerarFichaChecklist('" + c.id + "')\">Baixar</button>" +
+        "<button class=\"btn-link\" style=\"color:var(--vermelho);\" onclick=\"window.excluirChecklist('" + c.id + "')\">Excluir</button>" +
         "</td>";
       tbody.appendChild(tr);
 
@@ -1310,6 +1315,18 @@
     }catch(e){
       console.error(e);
       toast("Erro ao salvar checklist.", "erro");
+    }
+  };
+
+  window.excluirChecklist = async function(id){
+    if(!confirm("Excluir esse checklist? Essa ação não pode ser desfeita.")) return;
+    try{
+      await deleteDoc(doc(db, "checklists", id));
+      checklistsExpandidos.delete(id);
+      toast("Checklist excluído.", "sucesso");
+    }catch(e){
+      console.error(e);
+      toast("Erro ao excluir checklist.", "erro");
     }
   };
 
@@ -1542,7 +1559,7 @@
     canvas.height = rect.height * assinaturaDpr;
     const ctx = canvas.getContext("2d");
     ctx.scale(assinaturaDpr, assinaturaDpr);
-    ctx.strokeStyle = "#182B33";
+    ctx.strokeStyle = "#1A3FA8";
     ctx.lineWidth = 2.2;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -2558,9 +2575,7 @@
     imprimirComNomeArquivo("Abastecimentos-CRIL_" + dataInicioStr + "_a_" + dataFimStr);
   };
 
-  window.gerarFichaChecklist = function(checklistId){
-    const c = checklistsCarregados.find(x=>x.id===checklistId);
-    if(!c){ toast("Checklist não encontrado.", "erro"); return; }
+  function construirPaginasFichaChecklist(c){
     const data = c.data?.toDate ? c.data.toDate() : null;
     const dataFormatada = data ? data.toLocaleDateString("pt-BR") : "—";
     const horaFormatada = data ? data.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}) : "—";
@@ -2579,9 +2594,6 @@
         + "</tr>";
     });
 
-    const container = document.getElementById("print-paginas");
-    container.innerHTML = "";
-
     const pagina1 = document.createElement("div");
     pagina1.className = "pagina-impressao ficha-fesfsus";
     pagina1.innerHTML =
@@ -2598,7 +2610,6 @@
       '<tbody>' + linhasTabela + '</tbody></table>' +
       '</div>' +
       '<div class="ficha-rodape-fesfsus"><img src="' + LOGO_FESFSUS_FOOTER + '" alt="FESFSUS"></div>';
-    container.appendChild(pagina1);
 
     const blocoAssinatura = c.assinaturaMotorista
       ? '<div class="ficha-assinatura">Assinatura do Motorista:<br><img src="' + c.assinaturaMotorista + '" class="ficha-assinatura-imagem" alt="Assinatura"></div>'
@@ -2622,9 +2633,41 @@
       '<div class="ficha-observacao-final"><b>Observação:</b> Caso seja identificada qualquer irregularidade que comprometa a segurança ou a utilização do veículo, o motorista deverá comunicar imediatamente ao responsável pela frota antes de iniciar o deslocamento.</div>' +
       '</div>' +
       '<div class="ficha-rodape-fesfsus"><img src="' + LOGO_FESFSUS_FOOTER + '" alt="FESFSUS"></div>';
-    container.appendChild(pagina2);
 
+    return [pagina1, pagina2];
+  }
+
+  window.gerarFichaChecklist = function(checklistId){
+    const c = checklistsCarregados.find(x=>x.id===checklistId);
+    if(!c){ toast("Checklist não encontrado.", "erro"); return; }
+
+    const container = document.getElementById("print-paginas");
+    container.innerHTML = "";
+    construirPaginasFichaChecklist(c).forEach(pg=> container.appendChild(pg));
+
+    const data = c.data?.toDate ? c.data.toDate() : null;
+    const dataFormatada = data ? data.toLocaleDateString("pt-BR") : "semdata";
     imprimirComNomeArquivo("Checklist-CRIL_" + (c.dataStr || dataFormatada.replace(/\//g,"-")));
+  };
+
+  window.gerarFichaChecklistsPeriodo = function(){
+    const { dataInicioStr, dataFimStr } = obterIntervaloFiltro();
+    const checklistsPeriodo = checklistsCarregados
+      .filter(c=> c.dataStr && c.dataStr >= dataInicioStr && c.dataStr <= dataFimStr)
+      .sort((a,b)=> (a.dataStr || "").localeCompare(b.dataStr || ""));
+
+    if(!checklistsPeriodo.length){
+      toast("Nenhum checklist no período selecionado.", "erro");
+      return;
+    }
+
+    const container = document.getElementById("print-paginas");
+    container.innerHTML = "";
+    checklistsPeriodo.forEach(c=>{
+      construirPaginasFichaChecklist(c).forEach(pg=> container.appendChild(pg));
+    });
+
+    imprimirComNomeArquivo("Checklists-CRIL_" + dataInicioStr + "_a_" + dataFimStr);
   };
 </script>
 </body>
