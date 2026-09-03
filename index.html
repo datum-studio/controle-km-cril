@@ -666,37 +666,6 @@
 
       <div id="aba-configuracoes" style="display:none;">
         <div class="card">
-          <h2>Troca de óleo</h2>
-          <div class="card-sub">Intervalos configuráveis — vale o que vencer primeiro. Só o admin altera.</div>
-          <div class="grid-2">
-            <div class="field">
-              <label>Intervalo por KM</label>
-              <input type="number" id="input-intervalo-km-oleo" placeholder="Ex.: 10000">
-            </div>
-            <div class="field">
-              <label>Intervalo por meses</label>
-              <input type="number" id="input-intervalo-meses-oleo" placeholder="Ex.: 6">
-            </div>
-          </div>
-          <button class="btn btn-secundario" onclick="window.salvarConfigOleo()">Salvar intervalos</button>
-          <div id="status-troca-oleo" style="margin-top:14px;"></div>
-        </div>
-
-        <div class="card">
-          <h2>Cartão de abastecimento</h2>
-          <div class="card-sub">Deslocamento fixo somado à KM real do carro, para o motorista informar ao posto. Só o admin altera este valor.</div>
-          <div class="grid-2">
-            <div class="field">
-              <label>Deslocamento fixo (km)</label>
-              <input type="number" id="input-deslocamento-cartao" placeholder="Ex.: 128500">
-            </div>
-            <div style="display:flex; align-items:end;">
-              <button class="btn btn-secundario" style="width:100%;" onclick="window.salvarDeslocamentoCartao()">Salvar deslocamento</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
           <h2>Abastecimento retroativo</h2>
           <div class="card-sub">Pra corrigir ou inserir um abastecimento de uma data passada, já criando também o deslocamento correspondente na planilha de KM. Não mexe na KM atual do veículo (só um lançamento retroativo, não representa o estado de hoje).</div>
           <div class="field">
@@ -731,6 +700,37 @@
             </div>
           </div>
           <button class="btn btn-secundario" style="width:100%;" onclick="window.registrarAbastecimentoRetroativo()">Registrar abastecimento retroativo</button>
+        </div>
+
+        <div class="card">
+          <h2>Troca de óleo</h2>
+          <div class="card-sub">Intervalos configuráveis — vale o que vencer primeiro. Só o admin altera.</div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Intervalo por KM</label>
+              <input type="number" id="input-intervalo-km-oleo" placeholder="Ex.: 10000">
+            </div>
+            <div class="field">
+              <label>Intervalo por meses</label>
+              <input type="number" id="input-intervalo-meses-oleo" placeholder="Ex.: 6">
+            </div>
+          </div>
+          <button class="btn btn-secundario" onclick="window.salvarConfigOleo()">Salvar intervalos</button>
+          <div id="status-troca-oleo" style="margin-top:14px;"></div>
+        </div>
+
+        <div class="card">
+          <h2>Cartão de abastecimento</h2>
+          <div class="card-sub">Deslocamento fixo somado à KM real do carro, para o motorista informar ao posto. Só o admin altera este valor.</div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Deslocamento fixo (km)</label>
+              <input type="number" id="input-deslocamento-cartao" placeholder="Ex.: 128500">
+            </div>
+            <div style="display:flex; align-items:end;">
+              <button class="btn btn-secundario" style="width:100%;" onclick="window.salvarDeslocamentoCartao()">Salvar deslocamento</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
