@@ -1,4 +1,4 @@
-const CACHE_NAME = "km-cril-v4";
+const CACHE_NAME = "km-cril-v5";
 const ARQUIVOS_CACHE = [
   "./index.html",
   "./manifest.json",
